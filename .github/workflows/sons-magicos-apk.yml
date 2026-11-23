@@ -24,6 +24,20 @@ jobs:
         with:
           gradle-version: "8.14.3"
 
+      # Opcional: guarde sua chave em Settings > Secrets > Actions como SONS_KEYSTORE_BASE64
+      # (base64 do arquivo dados/chave/sons-magicos.keystore do servidor) para o APK
+      # do GitHub instalar por cima do APK gerado no servidor.
+      - name: Chave de assinatura
+        env:
+          CHAVE: ${{ secrets.SONS_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$CHAVE" ]; then
+            echo "$CHAVE" | base64 -d > "$RUNNER_TEMP/sons.keystore"
+            echo "SONS_KEYSTORE=$RUNNER_TEMP/sons.keystore" >> "$GITHUB_ENV"
+          else
+            echo "Sem chave fixa: APK assinado com chave de debug."
+          fi
+
       - name: Gerar APK
         run: gradle -p ipa-kids/android --no-daemon assembleRelease
 

@@ -20,4 +20,4 @@ services:
       context: .
       dockerfile: android/Dockerfile
     volumes:
-      - ${PASTA_DADOS:-./dados}/apk:/saida
+      - ${PASTA_DADOS:-./dados}:/dados

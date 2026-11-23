@@ -25,3 +25,5 @@ proguard/
 # Sons Mágicos
 ipa-kids/dados/
 ipa-kids/.env
+*.keystore
+*.jks

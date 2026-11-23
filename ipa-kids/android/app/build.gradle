@@ -14,23 +14,27 @@ android {
         versionName '1.0'
     }
 
-    // Chave fixa: assim cada nova versão instala por cima da anterior na TV.
+    // Chave de assinatura: com uma chave fixa, cada nova versão instala por cima da anterior na TV.
+    // Ela NÃO fica no repositório. Informe o caminho em SONS_KEYSTORE (o Docker do servidor cria uma
+    // sozinho em dados/chave/). Sem chave, o APK sai com a chave de debug padrão.
+    def chave = System.getenv('SONS_KEYSTORE') ? file(System.getenv('SONS_KEYSTORE')) : null
+    def senha = System.getenv('SONS_KEYSTORE_SENHA') ?: 'sonsmagicos'
+
     signingConfigs {
         casa {
-            storeFile file('../sons-magicos.keystore')
-            storePassword 'sonsmagicos'
-            keyAlias 'sonsmagicos'
-            keyPassword 'sonsmagicos'
+            if (chave != null && chave.exists()) {
+                storeFile chave
+                storePassword senha
+                keyAlias 'sonsmagicos'
+                keyPassword senha
+            }
         }
     }
 
     buildTypes {
         release {
             minifyEnabled false
-            signingConfig signingConfigs.casa
-        }
-        debug {
-            signingConfig signingConfigs.casa
+            signingConfig (chave != null && chave.exists()) ? signingConfigs.casa : signingConfigs.debug
         }
     }
 

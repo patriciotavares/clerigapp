@@ -56,8 +56,13 @@ Escolha um dos caminhos:
 - **GitHub (automático):** a cada mudança, o GitHub gera o APK. Em *Actions → Sons Mágicos - APK da TV*,
   abra a última execução e baixe **sons-magicos-apk**. Descompacte e copie o `sons-magicos.apk` para
   `PASTA_DADOS/apk/` no servidor.
-- **No próprio servidor:** `docker compose --profile apk run --rm --build apk`
+- **No próprio servidor (recomendado):** `docker compose --profile apk run --rm --build apk`
   (demora uns 10 minutos na primeira vez e já deixa o APK em `PASTA_DADOS/apk/`).
+  Ele cria uma chave de assinatura em `PASTA_DADOS/chave/`, que fica guardada no seu HD. Com ela, cada nova versão instala por cima da anterior sem perder nada.
+
+> O APK do GitHub sai com uma chave diferente a cada vez. Para atualizar com ele, desinstale a versão anterior da TV primeiro
+> (o progresso fica salvo no servidor). Ou cadastre a chave do servidor no GitHub como segredo `SONS_KEYSTORE_BASE64`
+> (`base64 -w0 PASTA_DADOS/chave/sons-magicos.keystore`).
 
 ## 3. Instalar na TV TCL (Google TV)
 
