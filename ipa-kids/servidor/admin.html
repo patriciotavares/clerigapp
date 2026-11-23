@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sons Mágicos — Pais</title>
+<link rel="stylesheet" href="/css/app.css">
+<style>
+  html, body { overflow: auto; height: auto; background: #eef6ff; }
+  body { max-width: 980px; margin: 0 auto; padding: 16px; font-size: 18px; cursor: auto; -webkit-user-select: text; user-select: text; }
+  h1 { font-size: 32px; margin: 8px 0; }
+  h2 { font-size: 24px; margin: 28px 0 8px; }
+  p { color: #5b6b84; line-height: 1.45; }
+  .linha { display: flex; align-items: center; gap: 10px; background: #fff; border-radius: 14px; padding: 10px 14px; margin: 6px 0; flex-wrap: wrap; }
+  .linha .ipa { font-size: 30px; font-weight: 700; color: #6c4cd8; min-width: 70px; }
+  .linha .nome { flex: 1; min-width: 160px; }
+  .linha .meu { color: #2fbf71; font-weight: 700; }
+  button, label.btn { font: inherit; font-size: 16px; border: 0; border-radius: 999px; padding: 8px 14px; background: #ffe08a; cursor: pointer; }
+  button.sec { background: #e6ecf5; }
+  input[type=file] { display: none; }
+  .relatorio { background: #fff; border-radius: 14px; padding: 12px 16px; margin: 6px 0; }
+  details summary { cursor: pointer; font-weight: 700; font-size: 20px; padding: 6px 0; }
+  .aviso { background: #fff7d6; border-radius: 14px; padding: 12px 16px; }
+</style>
+</head>
+<body>
+<h1>🐧 Sons Mágicos — Área dos pais</h1>
+<p>Aqui você pode trocar qualquer áudio do app por uma gravação <b>com a sua voz</b>. Grave no celular (gravador de voz) e envie o arquivo.
+   Para os sons isolados, fale o som sozinho e prolongado (ex.: “mmmm”, “ssss”), sem vogal no fim. Para as oclusivas (p, b, t…) faça o som curtinho.</p>
+<div class="aviso">📺 Para instalar na TV, abra o app <b>Downloader</b> na TV e digite: <b id="apk"></b></div>
+
+<h2>Progresso das crianças</h2>
+<div id="relatorio">Carregando…</div>
+
+<h2>Áudios</h2>
+<div id="lista"></div>
+
+<script src="/js/curriculo.js"></script>
+<script>
+const C = window.CURRICULO;
+document.getElementById("apk").textContent = location.origin + "/apk";
+let meus = new Set();
+
+async function atualizar() {
+  meus = new Set((await (await fetch("/api/audios")).json()).arquivos);
+  document.querySelectorAll("[data-arq]").forEach((l) => {
+    const tem = meus.has(l.dataset.arq);
+    l.querySelector(".meu").textContent = tem ? "✔ sua voz" : "";
+    l.querySelector(".apagar").style.display = tem ? "" : "none";
+  });
+}
+function tocar(url) { new Audio(url + "?t=" + Date.now()).play(); }
+
+function linha(arq, ipa, nome) {
+  const d = document.createElement("div");
+  d.className = "linha"; d.dataset.arq = arq;
+  d.innerHTML = `<span class="ipa">${ipa || ""}</span><span class="nome">${nome}</span><span class="meu"></span>
+    <button class="sec" data-a="padrao">▶ padrão</button>
+    <button class="sec" data-a="meu">▶ minha voz</button>
+    <label class="btn">⬆ enviar gravação<input type="file" accept="audio/*"></label>
+    <button class="sec apagar" data-a="apagar">🗑</button>`;
+  d.querySelector('[data-a=padrao]').onclick = () => tocar("/audio/" + arq);
+  d.querySelector('[data-a=meu]').onclick = () => meus.has(arq) ? tocar("/personalizado/audio/" + arq) : alert("Ainda não tem gravação sua para este áudio.");
+  d.querySelector('[data-a=apagar]').onclick = async () => { if (confirm("Voltar para o áudio padrão?")) { await fetch("/api/audios/" + arq, { method: "DELETE" }); atualizar(); } };
+  d.querySelector("input").onchange = async (e) => {
+    const f = e.target.files[0]; if (!f) return;
+    const r = await fetch("/api/audios/" + arq, { method: "PUT", body: f });
+    alert(r.ok ? "Gravação enviada! A TV usa a nova voz na próxima vez que abrir o app." : "Erro ao enviar.");
+    atualizar();
+  };
+  return d;
+}
+function grupo(titulo, itens) {
+  const det = document.createElement("details");
+  det.innerHTML = `<summary>${titulo}</summary>`;
+  itens.forEach((i) => det.appendChild(linha(...i)));
+  document.getElementById("lista").appendChild(det);
+}
+
+for (const u of C.unidades) {
+  grupo(`${C.personagens[u.personagem].nome}: ${u.titulo}`, [
+    [`intro_${u.id}.mp3`, "", `Apresentação: “${u.frase}”`],
+    ...u.sons.map((s) => [`som_${s.id}.mp3`, "/" + s.ipa + "/", `Som isolado (${s.letras}) — ${s.dica}`]),
+  ]);
+}
+grupo("Sílabas", C.silabas.flatMap((g) => g.itens.map(([o, ipa]) => [`silaba_${g.c}_${o}.mp3`, "/" + ipa + "/", `Sílaba “${o}”`])));
+grupo("Palavras", C.palavras.map((p) => [`palavra_${p.id}.mp3`, p.emoji || "🐾", `Palavra “${p.escrita || p.s.map((x) => x[0]).join("")}”`]));
+grupo("Sílabas dentro das palavras", C.palavras.flatMap((p) => p.s.map(([o, ipa], i) => [`psil_${p.id}_${i}.mp3`, "/" + ipa + "/", `“${o}” em ${p.escrita || p.s.map((x) => x[0]).join("")}`])));
+grupo("Frases dos personagens", Object.keys(C.personagens).flatMap((pid) => Object.entries(C.frases).map(([k, t]) => [`frase_${pid}_${k}.mp3`, "", `${C.personagens[pid].nome}: “${t}”`])));
+atualizar();
+
+(async () => {
+  const lista = await (await fetch("/api/relatorio")).json();
+  const total = Object.values(C.unidades).reduce((n, u) => n + u.sons.length, 0);
+  document.getElementById("relatorio").innerHTML = lista.length ? lista.map((p) => `<div class="relatorio"><b>${p.perfil}</b> — ${Object.keys(p.sons || {}).length}/${total} sons ·
+    ${Object.keys(p.silabas || {}).length} sílabas · ${Object.keys(p.palavras || {}).length} palavras · ${Object.keys(p.leitura || {}).length} leituras · ${p.estrelas || 0} ★
+    <br><small>última vez: ${p.atualizado ? new Date(p.atualizado).toLocaleString("pt-BR") : "-"}</small></div>`).join("") : "<p>Ainda sem progresso salvo.</p>";
+})();
+</script>
+</body>
+</html>

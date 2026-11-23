@@ -1,0 +1,5 @@
+dados
+art
+android/app/build
+android/.gradle
+**/node_modules

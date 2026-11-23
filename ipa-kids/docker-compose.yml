@@ -1,0 +1,23 @@
+# Uso no servidor:
+#   docker compose up -d --build                 # liga o servidor (porta 8080)
+#   docker compose --profile apk run --rm apk    # (opcional) gera o APK da TV aqui mesmo
+#
+# Troque PASTA_DADOS no arquivo .env para uma pasta no seu HD de 8 TB,
+# por exemplo: PASTA_DADOS=/mnt/hd8tb/sons-magicos
+services:
+  sons-magicos:
+    build: .
+    container_name: sons-magicos
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - ${PASTA_DADOS:-./dados}:/dados
+
+  apk:
+    profiles: ["apk"]
+    build:
+      context: .
+      dockerfile: android/Dockerfile
+    volumes:
+      - ${PASTA_DADOS:-./dados}/apk:/saida
