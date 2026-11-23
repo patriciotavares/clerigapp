@@ -28,3 +28,4 @@ ipa-kids/.env
 *.keystore
 *.jks
 ipa-kids/capturas/
+__pycache__/
