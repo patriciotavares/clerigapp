@@ -17,6 +17,7 @@ COPY android/ ./android/
 ENV SONS_KEYSTORE=/dados/chave/sons-magicos.keystore
 CMD ["sh", "-c", "set -e; mkdir -p /dados/chave /dados/apk; \
   [ -f $SONS_KEYSTORE ] || keytool -genkeypair -keystore $SONS_KEYSTORE -storepass sonsmagicos -keypass sonsmagicos -alias sonsmagicos -keyalg RSA -keysize 2048 -validity 36500 -dname 'CN=Sons Magicos, C=BR'; \
+  if ls /dados/vozes/*.mp3 >/dev/null 2>&1; then cp /dados/vozes/*.mp3 /src/web/audio/ && echo 'Usando as vozes naturais (Piper) no APK'; fi; \
   cd android && gradle --no-daemon -q assembleRelease; \
   cp app/build/outputs/apk/release/app-release.apk /dados/apk/sons-magicos.apk; \
   echo 'APK pronto: dados/apk/sons-magicos.apk  ->  na TV, Downloader: http://IP-DO-SERVIDOR:8080/apk'"]

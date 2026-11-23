@@ -69,7 +69,8 @@ aplicarVisual();
 
 /* ======================= Servidor caseiro ======================= */
 let servidor = null;              // URL base do servidor que respondeu
-let audiosPersonalizados = new Set();
+let audiosPersonalizados = new Set(); // gravações dos pais (/admin)
+let vozesNaturais = new Set();        // vozes Piper geradas no servidor
 
 function candidatosServidor() {
   const l = [];
@@ -94,6 +95,7 @@ async function conectarServidor() {
   try {
     const a = await (await buscar(servidor + "/api/audios")).json();
     audiosPersonalizados = new Set(a.arquivos || []);
+    vozesNaturais = new Set(a.vozes || []);
   } catch { /* ok */ }
   try {
     const p = await (await buscar(servidor + "/api/progresso/" + encodeURIComponent(config.perfil))).json();
@@ -123,7 +125,8 @@ player.preload = "auto";
 let tocandoResolve = null;
 function urlAudio(nome) {
   const arq = nome + ".mp3";
-  if (servidor && audiosPersonalizados.has(arq)) return servidor + "/personalizado/audio/" + arq + "?v=" + (audiosPersonalizados.versao || 0);
+  if (servidor && audiosPersonalizados.has(arq)) return servidor + "/personalizado/audio/" + arq;
+  if (servidor && vozesNaturais.has(arq)) return servidor + "/vozes/audio/" + arq;
   return "audio/" + arq;
 }
 function tocar(nome, { personagem = null } = {}) {
@@ -221,9 +224,19 @@ document.addEventListener("keydown", (ev) => {
 palco.addEventListener("click", (ev) => { const f = ev.target.closest(".foco"); if (f && f !== document.activeElement) f.focus(); });
 
 /* ======================= Peças visuais ======================= */
+// Personagem como boneco articulado: corpo + partes móveis (ver ferramentas/gerar_partes.py)
 function imgPersonagem(pid, estilo = "", classe = "") {
   const p = C.personagens[pid];
-  return `<img class="personagem ${classe}" src="${p.img}" alt="${esc(p.nome)}" style="${estilo}">`;
+  const r = window.RIG && window.RIG[pid];
+  if (!r) return `<img class="personagem ${classe}" src="${p.img}" alt="${esc(p.nome)}" style="${estilo}">`;
+  const alt = /height:\s*(\d+)px/.exec(estilo);
+  const largura = alt ? `width:${Math.round(+alt[1] * r.proporcao)}px;` : "";
+  // atraso aleatório para os bichos não se mexerem todos iguais
+  const atraso = `animation-delay:-${(Math.random() * 3).toFixed(2)}s`;
+  return `<div class="personagem boneco ${classe}" role="img" aria-label="${esc(p.nome)}" style="${estilo};${largura}">
+    <img class="camada" src="img/personagens/partes/${pid}_corpo.png" alt="">
+    ${r.partes.map((x) => `<img class="camada parte t-${x.tipo}" src="img/personagens/partes/${pid}_${x.nome}.png" alt="" style="transform-origin:${x.px}% ${x.py}%;${atraso}">`).join("")}
+  </div>`;
 }
 function figuraPalavra(p) {
   if (p.img) return `<div class="figura"><img src="${C.personagens[p.img].img}" alt=""></div>`;
@@ -238,6 +251,11 @@ function palavraMarcada(p, ipaAlvo) {
 }
 function estrelasTxt() { return `<span class="estrelas">★</span> ${progresso.estrelas}`; }
 function balao(texto, x, y) { return `<div class="balao" style="left:${x}px;top:${y}px">${esc(texto)}</div>`; }
+
+function comemorar(bicho) {
+  bicho.classList.add("feliz");
+  setTimeout(() => bicho.classList.remove("feliz"), 2600);
+}
 
 function festa(n = 70) {
   const cores = ["#ff6b6b", "#ffd93d", "#6bcB77", "#4d96ff", "#c77dff", "#ff9f43"];
@@ -390,7 +408,7 @@ async function jogoEncontrarSom(tela, s, u, t) {
     if (b.dataset.id === s.id) {
       b.classList.add("certo");
       marcar("sons", s.id, tentativas === 0);
-      festa(); bicho.classList.add("feliz");
+      festa(); comemorar(bicho);
       await tocar(`frase_${u.personagem}_muito_bem`, { personagem: bicho }); if (!vivo(t)) return;
       await tocar("som_" + s.id); if (!vivo(t)) return;
       mostrarProximo(tela, () => {
@@ -501,7 +519,7 @@ TELAS.silabas = async (tela, { c }, t) => {
   let tent = 0;
   $$(".opcao", caixa).forEach((b) => (b.onclick = async () => {
     if (b.dataset.o === alvo[0]) {
-      b.classList.add("certo"); festa(); bicho.classList.add("feliz");
+      b.classList.add("certo"); festa(); comemorar(bicho);
       marcar("silabas", c + "_" + alvo[0], tent === 0);
       await tocar(`frase_${per}_muito_bem`, { personagem: bicho }); if (!vivo(t)) return;
       const idx = C.silabas.findIndex((g) => g.c === c);
@@ -593,7 +611,7 @@ TELAS.ler = async (tela, { nivel = 0 } = {}, t) => {
   let tent = 0;
   $$(".opcao", tela).forEach((b) => (b.onclick = async () => {
     if (b.dataset.id === p.id) {
-      b.classList.add("certo"); festa(); bicho.classList.add("feliz");
+      b.classList.add("certo"); festa(); comemorar(bicho);
       marcar("leitura", p.id, tent === 0);
       await tocar("palavra_" + p.id, { personagem: bicho }); if (!vivo(t)) return;
       await tocar(`frase_${guia}_muito_bem`, { personagem: bicho }); if (!vivo(t)) return;

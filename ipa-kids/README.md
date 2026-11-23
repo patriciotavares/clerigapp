@@ -85,7 +85,22 @@ O app encontra o servidor sozinho na rede da casa. Se não encontrar, vá em **�
 
 **⚙️ Pais** (na tela inicial): perfis para cada filho, mostrar ou esconder IPA e letras, tempo de tela e servidor.
 
-## 5. Gravar com a sua voz (recomendado!)
+## 5. Vozes naturais (Piper, grátis)
+
+As vozes que vêm no APK são robóticas. Para trocar por uma voz neural brasileira natural, rode **uma vez** no servidor:
+
+```bash
+docker compose --profile vozes run --rm --build vozes
+```
+
+Ele baixa a voz Piper (`pt_BR-faber-medium`) e gera uns 400 áudios em `PASTA_DADOS/vozes/`, com um tom diferente para cada personagem
+(o Pato e o Coelho mais agudos, o Urso mais grave). A TV passa a usar essas vozes assim que abrir o app de novo. Depois disso, gere o APK de novo
+(passo 2): ele já leva as vozes naturais para dentro, e assim a TV fica com elas mesmo sem o servidor.
+
+- Outra voz: `VOZ=pt_BR-cadu-medium docker compose --profile vozes run --rm vozes` (amostras em https://rhasspy.github.io/piper-samples/).
+- Os sons que "pulam" (p, b, t, d, k, g) continuam com a voz padrão, porque uma voz natural não consegue dizê-los sozinhos. Grave esses com a sua voz.
+
+## 6. Gravar com a sua voz (recomendado!)
 
 As vozes que vêm no app são sintetizadas (espeak-ng + MBROLA). **A voz da mãe ou do pai ensina muito melhor.**
 No celular, abra `http://IP-DO-SERVIDOR:8080/admin`:
@@ -109,7 +124,9 @@ ipa-kids/
 │  ├─ js/app.js            telas, navegação pelo controle, jogos, modo Assistir
 │  ├─ audio/               áudios gerados
 │  └─ img/personagens/     personagens recortados (originais em art/originais)
-├─ ferramentas/gerar_audios.mjs   gera os áudios a partir do curriculo.js
+├─ ferramentas/gerar_audios.mjs   gera os áudios padrão (espeak) a partir do curriculo.js
+├─ ferramentas/gerar_vozes_piper.py  gera as vozes naturais (roda no Docker do servidor)
+├─ ferramentas/gerar_partes.py    recorta os personagens em partes móveis (cabeça, asas, orelhas, rabo)
 ├─ servidor/               servidor Node (sem dependências) + página /admin
 ├─ android/                app Android TV (WebView que carrega a pasta web/)
 ├─ Dockerfile, docker-compose.yml
@@ -118,6 +135,7 @@ ipa-kids/
 - **Adicionar palavras:** inclua em `palavras` no `curriculo.js` e rode
   `node ferramentas/gerar_audios.mjs` (precisa de `espeak-ng mbrola mbrola-br4 ffmpeg`).
 - **Novo personagem:** coloque o PNG (fundo transparente) em `web/img/personagens/` e adicione em `personagens`.
+  Para ele se mexer, marque as partes móveis em `ferramentas/gerar_partes.py` e rode `python3 ferramentas/gerar_partes.py`.
 - **Testar no computador:** `node servidor/server.js` e abra `http://localhost:8080` (setas, Enter e Esc).
 
 Transcrição usada: IPA "larga" do português brasileiro (ex.: *pato* → /ˈpa.tu/, *tigre* → /ˈtʃi.gɾi/), exatamente como a criança ouve.

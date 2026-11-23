@@ -21,7 +21,8 @@ const DADOS = path.resolve(process.env.DADOS || path.join(__dirname, "..", "dado
 const DIR_AUDIO = path.join(DADOS, "audio");
 const DIR_PROG = path.join(DADOS, "progresso");
 const DIR_APK = path.join(DADOS, "apk");
-for (const d of [DIR_AUDIO, DIR_PROG, DIR_APK]) fs.mkdirSync(d, { recursive: true });
+const DIR_VOZES = path.join(DADOS, "vozes"); // vozes naturais geradas pelo Piper
+for (const d of [DIR_AUDIO, DIR_PROG, DIR_APK, DIR_VOZES]) fs.mkdirSync(d, { recursive: true });
 
 const TIPOS = {
   ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".mjs": "text/javascript; charset=utf-8",
@@ -84,7 +85,8 @@ const servidor = http.createServer(async (req, res) => {
 
     if (p === "/api/audios") {
       const arquivos = fs.readdirSync(DIR_AUDIO).filter(nomeSeguro);
-      return json(res, 200, { arquivos });
+      const vozes = fs.readdirSync(DIR_VOZES).filter((f) => nomeSeguro(f) && f.endsWith(".mp3"));
+      return json(res, 200, { arquivos, vozes });
     }
     let m;
     if ((m = /^\/api\/audios\/([^/]+)$/.exec(p))) {
@@ -138,6 +140,12 @@ const servidor = http.createServer(async (req, res) => {
       const nome = p.slice("/personalizado/audio/".length);
       if (!nomeSeguro(nome)) { res.writeHead(400); return res.end(); }
       return enviarArquivo(req, res, path.join(DIR_AUDIO, nome), { "Cache-Control": "no-cache" });
+    }
+
+    if (p.startsWith("/vozes/audio/")) {
+      const nome = p.slice("/vozes/audio/".length);
+      if (!nomeSeguro(nome)) { res.writeHead(400); return res.end(); }
+      return enviarArquivo(req, res, path.join(DIR_VOZES, nome), { "Cache-Control": "max-age=3600" });
     }
 
     // ---------- APK para a TV ----------

@@ -1,6 +1,7 @@
 # Uso no servidor:
 #   docker compose up -d --build                 # liga o servidor (porta 8080)
-#   docker compose --profile apk run --rm apk    # (opcional) gera o APK da TV aqui mesmo
+#   docker compose --profile vozes run --rm --build vozes   # gera as vozes naturais (Piper)
+#   docker compose --profile apk run --rm --build apk       # gera o APK da TV aqui mesmo
 #
 # Troque PASTA_DADOS no arquivo .env para uma pasta no seu HD de 8 TB,
 # por exemplo: PASTA_DADOS=/mnt/hd8tb/sons-magicos
@@ -20,4 +21,15 @@ services:
       context: .
       dockerfile: android/Dockerfile
     volumes:
+      - ${PASTA_DADOS:-./dados}:/dados
+
+  vozes:
+    profiles: ["vozes"]
+    build:
+      context: .
+      dockerfile: ferramentas/Dockerfile.vozes
+    environment:
+      - VOZ=${VOZ:-pt_BR-faber-medium}
+    volumes:
+      - ./web:/web:ro
       - ${PASTA_DADOS:-./dados}:/dados

@@ -1,0 +1,7 @@
+# Gera vozes naturais (Piper) no servidor da casa. Veja ferramentas/gerar_vozes_piper.py
+FROM python:3.12-slim
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg && rm -rf /var/lib/apt/lists/* \
+ && pip install --no-cache-dir piper-tts json5 numpy
+COPY ferramentas/gerar_vozes_piper.py /app/gerar_vozes_piper.py
+ENV WEB=/web SAIDA=/dados/vozes MODELOS=/dados/modelos-voz
+CMD ["python", "/app/gerar_vozes_piper.py"]

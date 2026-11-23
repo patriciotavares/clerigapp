@@ -40,9 +40,11 @@
 const C = window.CURRICULO;
 document.getElementById("apk").textContent = location.origin + "/apk";
 let meus = new Set();
+let vozes = new Set();
 
 async function atualizar() {
-  meus = new Set((await (await fetch("/api/audios")).json()).arquivos);
+  const a = await (await fetch("/api/audios")).json();
+  meus = new Set(a.arquivos); vozes = new Set(a.vozes || []);
   document.querySelectorAll("[data-arq]").forEach((l) => {
     const tem = meus.has(l.dataset.arq);
     l.querySelector(".meu").textContent = tem ? "✔ sua voz" : "";
@@ -59,7 +61,7 @@ function linha(arq, ipa, nome) {
     <button class="sec" data-a="meu">▶ minha voz</button>
     <label class="btn">⬆ enviar gravação<input type="file" accept="audio/*"></label>
     <button class="sec apagar" data-a="apagar">🗑</button>`;
-  d.querySelector('[data-a=padrao]').onclick = () => tocar("/audio/" + arq);
+  d.querySelector('[data-a=padrao]').onclick = () => tocar((vozes.has(arq) ? "/vozes/audio/" : "/audio/") + arq);
   d.querySelector('[data-a=meu]').onclick = () => meus.has(arq) ? tocar("/personalizado/audio/" + arq) : alert("Ainda não tem gravação sua para este áudio.");
   d.querySelector('[data-a=apagar]').onclick = async () => { if (confirm("Voltar para o áudio padrão?")) { await fetch("/api/audios/" + arq, { method: "DELETE" }); atualizar(); } };
   d.querySelector("input").onchange = async (e) => {
