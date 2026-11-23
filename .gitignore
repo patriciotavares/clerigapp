@@ -27,3 +27,4 @@ ipa-kids/dados/
 ipa-kids/.env
 *.keystore
 *.jks
+ipa-kids/capturas/

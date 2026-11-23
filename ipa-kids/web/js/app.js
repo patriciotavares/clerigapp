@@ -461,9 +461,10 @@ async function demonstrarSilabas(tela, grupo, t, { passivo = false } = {}) {
     await tocar("som_" + vogalId, { personagem: bicho }); if (!ok()) return false;
     // junta
     mais.style.opacity = 0;
-    pc.style.left = "380px"; pv.style.left = "380px";
+    pc.style.left = "250px"; pv.style.left = "640px"; // encostam uma na outra
     await esperar(900); if (!ok()) return false;
     pv.classList.add("sumir");
+    pc.style.left = "";
     pc.classList.add("juntas");
     pc.innerHTML = `<div class="ipa so-ipa">${esc(ipa)}</div><div class="esc so-escrita">${esc(o)}</div>`;
     await tocar(`silaba_${grupo.c}_${o}`, { personagem: bicho }); if (!ok()) return false;
