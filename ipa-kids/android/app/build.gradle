@@ -34,7 +34,7 @@ android {
     buildTypes {
         release {
             minifyEnabled false
-            signingConfig (chave != null && chave.exists()) ? signingConfigs.casa : signingConfigs.debug
+            signingConfig = (chave != null && chave.exists()) ? signingConfigs.casa : signingConfigs.debug
         }
     }
 
