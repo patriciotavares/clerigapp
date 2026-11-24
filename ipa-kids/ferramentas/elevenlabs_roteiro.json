@@ -1,0 +1,1381 @@
+{
+ "lotes": [
+  {
+   "voz": "narrador",
+   "itens": [
+    {
+     "nome": "som_a",
+     "texto": "Aaaa.",
+     "copias": []
+    },
+    {
+     "nome": "som_i",
+     "texto": "Iiii.",
+     "copias": []
+    },
+    {
+     "nome": "som_u",
+     "texto": "Uuuu.",
+     "copias": []
+    },
+    {
+     "nome": "som_e",
+     "texto": "Êêêê.",
+     "copias": []
+    },
+    {
+     "nome": "som_o",
+     "texto": "Ôôôô.",
+     "copias": []
+    },
+    {
+     "nome": "som_eh",
+     "texto": "Éééé.",
+     "copias": []
+    },
+    {
+     "nome": "som_oh",
+     "texto": "Óóóó.",
+     "copias": []
+    },
+    {
+     "nome": "som_m",
+     "texto": "Mmmmmm.",
+     "copias": []
+    },
+    {
+     "nome": "som_n",
+     "texto": "Nnnnnn.",
+     "copias": []
+    },
+    {
+     "nome": "som_nh",
+     "texto": "Nhnhnhnh.",
+     "copias": []
+    },
+    {
+     "nome": "som_l",
+     "texto": "Llllll.",
+     "copias": []
+    },
+    {
+     "nome": "som_lh",
+     "texto": "Lhlhlhlh.",
+     "copias": []
+    },
+    {
+     "nome": "som_f",
+     "texto": "Ffffff.",
+     "copias": []
+    },
+    {
+     "nome": "som_v",
+     "texto": "Vvvvvv.",
+     "copias": []
+    },
+    {
+     "nome": "som_s",
+     "texto": "Ssssss.",
+     "copias": []
+    },
+    {
+     "nome": "som_z",
+     "texto": "Zzzzzz.",
+     "copias": []
+    },
+    {
+     "nome": "som_ch",
+     "texto": "Shhhhhh.",
+     "copias": []
+    },
+    {
+     "nome": "som_j",
+     "texto": "Jjjjjj.",
+     "copias": []
+    },
+    {
+     "nome": "som_rr",
+     "texto": "Rrrrrr.",
+     "copias": []
+    },
+    {
+     "nome": "som_an",
+     "texto": "Ããããã.",
+     "copias": []
+    },
+    {
+     "nome": "som_en",
+     "texto": "Ẽẽẽẽ.",
+     "copias": []
+    },
+    {
+     "nome": "som_in",
+     "texto": "Ĩĩĩĩ.",
+     "copias": []
+    },
+    {
+     "nome": "som_on",
+     "texto": "Õõõõ.",
+     "copias": []
+    },
+    {
+     "nome": "som_un",
+     "texto": "Ũũũũ.",
+     "copias": []
+    },
+    {
+     "nome": "silaba_p_pa",
+     "texto": "pá.",
+     "copias": [
+      "psil_pato_0",
+      "psil_pipa_1",
+      "psil_sapato_1"
+     ]
+    },
+    {
+     "nome": "silaba_p_pe",
+     "texto": "pê.",
+     "copias": []
+    },
+    {
+     "nome": "silaba_p_pi",
+     "texto": "pi.",
+     "copias": [
+      "psil_pipa_0"
+     ]
+    },
+    {
+     "nome": "silaba_p_po",
+     "texto": "pô.",
+     "copias": []
+    },
+    {
+     "nome": "silaba_p_pu",
+     "texto": "pu.",
+     "copias": [
+      "psil_sapo_1",
+      "psil_copo_1"
+     ]
+    },
+    {
+     "nome": "silaba_b_ba",
+     "texto": "bá.",
+     "copias": [
+      "psil_banana_0"
+     ]
+    }
+   ]
+  },
+  {
+   "voz": "narrador",
+   "itens": [
+    {
+     "nome": "silaba_b_be",
+     "texto": "bê.",
+     "copias": [
+      "psil_bebe_0",
+      "psil_bebe_1",
+      "psil_abelha_1"
+     ]
+    },
+    {
+     "nome": "silaba_b_bi",
+     "texto": "bi.",
+     "copias": []
+    },
+    {
+     "nome": "silaba_b_bo",
+     "texto": "bô.",
+     "copias": [
+      "psil_bolo_0"
+     ]
+    },
+    {
+     "nome": "silaba_b_bu",
+     "texto": "bu.",
+     "copias": [
+      "psil_lobo_1"
+     ]
+    },
+    {
+     "nome": "silaba_m_ma",
+     "texto": "má.",
+     "copias": [
+      "psil_mala_0",
+      "psil_macaco_0",
+      "psil_tomate_1",
+      "psil_maca_0"
+     ]
+    },
+    {
+     "nome": "silaba_m_me",
+     "texto": "mê.",
+     "copias": []
+    },
+    {
+     "nome": "silaba_m_mi",
+     "texto": "mi.",
+     "copias": []
+    },
+    {
+     "nome": "silaba_m_mo",
+     "texto": "mô.",
+     "copias": []
+    },
+    {
+     "nome": "silaba_m_mu",
+     "texto": "mu.",
+     "copias": []
+    },
+    {
+     "nome": "silaba_t_ta",
+     "texto": "tá.",
+     "copias": [
+      "psil_bota_1"
+     ]
+    },
+    {
+     "nome": "silaba_t_te",
+     "texto": "tê.",
+     "copias": []
+    },
+    {
+     "nome": "silaba_t_ti",
+     "texto": "ti.",
+     "copias": [
+      "psil_tomate_2",
+      "psil_tigre_0",
+      "psil_dente_1",
+      "psil_ponte_1"
+     ]
+    },
+    {
+     "nome": "silaba_t_to",
+     "texto": "tô.",
+     "copias": [
+      "psil_tomate_0"
+     ]
+    },
+    {
+     "nome": "silaba_t_tu",
+     "texto": "tu.",
+     "copias": [
+      "psil_pato_1",
+      "psil_gato_1",
+      "psil_rato_1",
+      "psil_moto_1",
+      "psil_sapato_2"
+     ]
+    },
+    {
+     "nome": "silaba_d_da",
+     "texto": "dá.",
+     "copias": [
+      "psil_dado_0"
+     ]
+    },
+    {
+     "nome": "silaba_d_de",
+     "texto": "dê.",
+     "copias": [
+      "psil_dedo_0"
+     ]
+    },
+    {
+     "nome": "silaba_d_di",
+     "texto": "di.",
+     "copias": [
+      "psil_dinossauro_0"
+     ]
+    },
+    {
+     "nome": "silaba_d_do",
+     "texto": "dô.",
+     "copias": []
+    },
+    {
+     "nome": "silaba_d_du",
+     "texto": "du.",
+     "copias": [
+      "psil_dado_1",
+      "psil_dedo_1",
+      "psil_mundo_1"
+     ]
+    },
+    {
+     "nome": "silaba_n_na",
+     "texto": "ná.",
+     "copias": [
+      "psil_navio_0",
+      "psil_banana_2"
+     ]
+    },
+    {
+     "nome": "silaba_n_ne",
+     "texto": "nê.",
+     "copias": []
+    },
+    {
+     "nome": "silaba_n_ni",
+     "texto": "ni.",
+     "copias": []
+    },
+    {
+     "nome": "silaba_n_no",
+     "texto": "nô.",
+     "copias": [
+      "psil_dinossauro_1"
+     ]
+    },
+    {
+     "nome": "silaba_n_nu",
+     "texto": "nu.",
+     "copias": []
+    },
+    {
+     "nome": "silaba_l_la",
+     "texto": "lá.",
+     "copias": [
+      "psil_bola_1",
+      "psil_mala_1",
+      "psil_vela_1",
+      "psil_janela_2"
+     ]
+    },
+    {
+     "nome": "silaba_l_le",
+     "texto": "lê.",
+     "copias": []
+    },
+    {
+     "nome": "silaba_l_li",
+     "texto": "li.",
+     "copias": []
+    },
+    {
+     "nome": "silaba_l_lo",
+     "texto": "lô.",
+     "copias": [
+      "psil_lobo_0"
+     ]
+    },
+    {
+     "nome": "silaba_l_lu",
+     "texto": "lu.",
+     "copias": [
+      "psil_lua_0",
+      "psil_bolo_1",
+      "psil_galo_1",
+      "psil_gelo_1"
+     ]
+    },
+    {
+     "nome": "silaba_f_fa",
+     "texto": "fá.",
+     "copias": [
+      "psil_sofa_1"
+     ]
+    }
+   ]
+  },
+  {
+   "voz": "narrador",
+   "itens": [
+    {
+     "nome": "silaba_f_fe",
+     "texto": "fê.",
+     "copias": []
+    },
+    {
+     "nome": "silaba_f_fi",
+     "texto": "fi.",
+     "copias": []
+    },
+    {
+     "nome": "silaba_f_fo",
+     "texto": "fô.",
+     "copias": [
+      "psil_fogo_0"
+     ]
+    },
+    {
+     "nome": "silaba_f_fu",
+     "texto": "fu.",
+     "copias": []
+    },
+    {
+     "nome": "silaba_v_va",
+     "texto": "vá.",
+     "copias": [
+      "psil_uva_1",
+      "psil_vaca_0"
+     ]
+    },
+    {
+     "nome": "silaba_v_ve",
+     "texto": "vê.",
+     "copias": []
+    },
+    {
+     "nome": "silaba_v_vi",
+     "texto": "vi.",
+     "copias": [
+      "psil_navio_1",
+      "psil_chave_1"
+     ]
+    },
+    {
+     "nome": "silaba_v_vo",
+     "texto": "vô.",
+     "copias": [
+      "psil_vovo_0"
+     ]
+    },
+    {
+     "nome": "silaba_v_vu",
+     "texto": "vu.",
+     "copias": [
+      "psil_ovo_1"
+     ]
+    },
+    {
+     "nome": "silaba_s_sa",
+     "texto": "sá.",
+     "copias": [
+      "psil_sapo_0",
+      "psil_sapato_0"
+     ]
+    },
+    {
+     "nome": "silaba_s_se",
+     "texto": "sê.",
+     "copias": []
+    },
+    {
+     "nome": "silaba_s_si",
+     "texto": "si.",
+     "copias": []
+    },
+    {
+     "nome": "silaba_s_so",
+     "texto": "sô.",
+     "copias": [
+      "psil_sofa_0"
+     ]
+    },
+    {
+     "nome": "silaba_s_su",
+     "texto": "su.",
+     "copias": [
+      "psil_urso_1"
+     ]
+    },
+    {
+     "nome": "silaba_z_za",
+     "texto": "zá.",
+     "copias": [
+      "psil_casa_1"
+     ]
+    },
+    {
+     "nome": "silaba_z_ze",
+     "texto": "zê.",
+     "copias": [
+      "psil_zebra_0"
+     ]
+    },
+    {
+     "nome": "silaba_z_zi",
+     "texto": "zi.",
+     "copias": []
+    },
+    {
+     "nome": "silaba_z_zo",
+     "texto": "zô.",
+     "copias": []
+    },
+    {
+     "nome": "silaba_z_zu",
+     "texto": "zu.",
+     "copias": []
+    },
+    {
+     "nome": "silaba_k_ca",
+     "texto": "cá.",
+     "copias": [
+      "psil_vaca_1",
+      "psil_foca_1",
+      "psil_casa_0",
+      "psil_cafe_0",
+      "psil_macaco_1",
+      "psil_jacare_1",
+      "psil_cachorro_0"
+     ]
+    },
+    {
+     "nome": "silaba_k_que",
+     "texto": "quê.",
+     "copias": []
+    },
+    {
+     "nome": "silaba_k_qui",
+     "texto": "qui.",
+     "copias": []
+    },
+    {
+     "nome": "silaba_k_co",
+     "texto": "cô.",
+     "copias": [
+      "psil_coelho_0"
+     ]
+    },
+    {
+     "nome": "silaba_k_cu",
+     "texto": "cu.",
+     "copias": [
+      "psil_macaco_2"
+     ]
+    },
+    {
+     "nome": "silaba_g_ga",
+     "texto": "gá.",
+     "copias": [
+      "psil_gato_0",
+      "psil_galo_0"
+     ]
+    },
+    {
+     "nome": "silaba_g_gue",
+     "texto": "guê.",
+     "copias": []
+    },
+    {
+     "nome": "silaba_g_gui",
+     "texto": "gui.",
+     "copias": []
+    },
+    {
+     "nome": "silaba_g_go",
+     "texto": "gô.",
+     "copias": []
+    },
+    {
+     "nome": "silaba_g_gu",
+     "texto": "gu.",
+     "copias": [
+      "psil_fogo_1"
+     ]
+    },
+    {
+     "nome": "silaba_ch_cha",
+     "texto": "chá.",
+     "copias": [
+      "psil_chave_0"
+     ]
+    }
+   ]
+  },
+  {
+   "voz": "narrador",
+   "itens": [
+    {
+     "nome": "silaba_ch_che",
+     "texto": "chê.",
+     "copias": []
+    },
+    {
+     "nome": "silaba_ch_chi",
+     "texto": "chi.",
+     "copias": []
+    },
+    {
+     "nome": "silaba_ch_cho",
+     "texto": "chô.",
+     "copias": [
+      "psil_cachorro_1"
+     ]
+    },
+    {
+     "nome": "silaba_ch_chu",
+     "texto": "chu.",
+     "copias": []
+    },
+    {
+     "nome": "silaba_j_ja",
+     "texto": "já.",
+     "copias": [
+      "psil_janela_0",
+      "psil_jacare_0",
+      "psil_igreja_2"
+     ]
+    },
+    {
+     "nome": "silaba_j_je",
+     "texto": "jê.",
+     "copias": [
+      "psil_gelo_0"
+     ]
+    },
+    {
+     "nome": "silaba_j_ji",
+     "texto": "ji.",
+     "copias": []
+    },
+    {
+     "nome": "silaba_j_jo",
+     "texto": "jô.",
+     "copias": []
+    },
+    {
+     "nome": "silaba_j_ju",
+     "texto": "ju.",
+     "copias": []
+    },
+    {
+     "nome": "silaba_rr_ra",
+     "texto": "rá.",
+     "copias": [
+      "psil_rato_0"
+     ]
+    },
+    {
+     "nome": "silaba_rr_re",
+     "texto": "rê.",
+     "copias": []
+    },
+    {
+     "nome": "silaba_rr_ri",
+     "texto": "ri.",
+     "copias": []
+    },
+    {
+     "nome": "silaba_rr_ro",
+     "texto": "rô.",
+     "copias": []
+    },
+    {
+     "nome": "silaba_rr_ru",
+     "texto": "ru.",
+     "copias": [
+      "psil_cachorro_2"
+     ]
+    },
+    {
+     "nome": "silaba_nh_nha",
+     "texto": "nhá.",
+     "copias": []
+    },
+    {
+     "nome": "silaba_nh_nhe",
+     "texto": "nhê.",
+     "copias": []
+    },
+    {
+     "nome": "silaba_nh_nhi",
+     "texto": "nhi.",
+     "copias": []
+    },
+    {
+     "nome": "silaba_nh_nho",
+     "texto": "nhô.",
+     "copias": []
+    },
+    {
+     "nome": "silaba_nh_nhu",
+     "texto": "nhu.",
+     "copias": [
+      "psil_ninho_1"
+     ]
+    },
+    {
+     "nome": "silaba_lh_lha",
+     "texto": "lhá.",
+     "copias": [
+      "psil_abelha_2"
+     ]
+    },
+    {
+     "nome": "silaba_lh_lhe",
+     "texto": "lhê.",
+     "copias": []
+    },
+    {
+     "nome": "silaba_lh_lhi",
+     "texto": "lhi.",
+     "copias": []
+    },
+    {
+     "nome": "silaba_lh_lho",
+     "texto": "lhô.",
+     "copias": []
+    },
+    {
+     "nome": "silaba_lh_lhu",
+     "texto": "lhu.",
+     "copias": [
+      "psil_coelho_2"
+     ]
+    },
+    {
+     "nome": "psil_bola_0",
+     "texto": "bó.",
+     "copias": [
+      "psil_bota_0"
+     ]
+    },
+    {
+     "nome": "psil_uva_0",
+     "texto": "u.",
+     "copias": [
+      "psil_navio_2"
+     ]
+    },
+    {
+     "nome": "psil_ovo_0",
+     "texto": "ô.",
+     "copias": []
+    },
+    {
+     "nome": "psil_pe_0",
+     "texto": "pé.",
+     "copias": [
+      "palavra_pe"
+     ]
+    },
+    {
+     "nome": "psil_lua_1",
+     "texto": "á.",
+     "copias": [
+      "psil_arara_0",
+      "psil_abelha_0"
+     ]
+    },
+    {
+     "nome": "psil_foca_0",
+     "texto": "fó.",
+     "copias": []
+    }
+   ]
+  },
+  {
+   "voz": "narrador",
+   "itens": [
+    {
+     "nome": "psil_copo_0",
+     "texto": "có.",
+     "copias": []
+    },
+    {
+     "nome": "psil_vela_0",
+     "texto": "vé.",
+     "copias": []
+    },
+    {
+     "nome": "psil_moto_0",
+     "texto": "mó.",
+     "copias": []
+    },
+    {
+     "nome": "psil_cafe_1",
+     "texto": "fé.",
+     "copias": []
+    },
+    {
+     "nome": "psil_vovo_1",
+     "texto": "vó.",
+     "copias": []
+    },
+    {
+     "nome": "psil_janela_1",
+     "texto": "né.",
+     "copias": []
+    },
+    {
+     "nome": "psil_ninho_0",
+     "texto": "nin.",
+     "copias": []
+    },
+    {
+     "nome": "psil_coelho_1",
+     "texto": "ê.",
+     "copias": []
+    },
+    {
+     "nome": "psil_zebra_1",
+     "texto": "brá.",
+     "copias": []
+    },
+    {
+     "nome": "psil_tigre_1",
+     "texto": "gri.",
+     "copias": []
+    },
+    {
+     "nome": "psil_dinossauro_2",
+     "texto": "sáu.",
+     "copias": []
+    },
+    {
+     "nome": "psil_igreja_0",
+     "texto": "i.",
+     "copias": []
+    },
+    {
+     "nome": "psil_igreja_1",
+     "texto": "grê.",
+     "copias": []
+    },
+    {
+     "nome": "psil_urso_0",
+     "texto": "ur.",
+     "copias": []
+    },
+    {
+     "nome": "psil_maca_1",
+     "texto": "sã.",
+     "copias": []
+    },
+    {
+     "nome": "psil_dente_0",
+     "texto": "dên.",
+     "copias": []
+    },
+    {
+     "nome": "psil_pinguim_0",
+     "texto": "pin.",
+     "copias": []
+    },
+    {
+     "nome": "psil_pinguim_1",
+     "texto": "guin.",
+     "copias": []
+    },
+    {
+     "nome": "psil_ponte_0",
+     "texto": "pom.",
+     "copias": []
+    },
+    {
+     "nome": "psil_mundo_0",
+     "texto": "mun.",
+     "copias": []
+    },
+    {
+     "nome": "psil_banana_1",
+     "texto": "nã.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_pato",
+     "texto": "pato.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_bola",
+     "texto": "bola.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_uva",
+     "texto": "uva.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_ovo",
+     "texto": "ovo.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_dado",
+     "texto": "dado.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_dedo",
+     "texto": "dedo.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_lua",
+     "texto": "lua.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_vaca",
+     "texto": "vaca.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_foca",
+     "texto": "foca.",
+     "copias": []
+    }
+   ]
+  },
+  {
+   "voz": "narrador",
+   "itens": [
+    {
+     "nome": "palavra_sapo",
+     "texto": "sapo.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_gato",
+     "texto": "gato.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_copo",
+     "texto": "copo.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_rato",
+     "texto": "rato.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_casa",
+     "texto": "casa.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_bolo",
+     "texto": "bolo.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_galo",
+     "texto": "galo.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_lobo",
+     "texto": "lobo.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_mala",
+     "texto": "mala.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_bota",
+     "texto": "bota.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_pipa",
+     "texto": "pipa.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_vela",
+     "texto": "vela.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_fogo",
+     "texto": "fogo.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_gelo",
+     "texto": "gelo.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_moto",
+     "texto": "moto.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_cafe",
+     "texto": "café.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_sofa",
+     "texto": "sofá.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_bebe",
+     "texto": "bebê.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_vovo",
+     "texto": "vovó.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_macaco",
+     "texto": "macaco.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_sapato",
+     "texto": "sapato.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_navio",
+     "texto": "navio.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_arara",
+     "texto": "arara.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_chave",
+     "texto": "chave.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_janela",
+     "texto": "janela.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_jacare",
+     "texto": "jacaré.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_ninho",
+     "texto": "ninho.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_abelha",
+     "texto": "abelha.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_coelho",
+     "texto": "coelho.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_tomate",
+     "texto": "tomate.",
+     "copias": []
+    }
+   ]
+  },
+  {
+   "voz": "narrador",
+   "itens": [
+    {
+     "nome": "palavra_zebra",
+     "texto": "zebra.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_tigre",
+     "texto": "tigre.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_dinossauro",
+     "texto": "dinossauro.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_igreja",
+     "texto": "igreja.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_cachorro",
+     "texto": "cachorro.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_urso",
+     "texto": "urso.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_maca",
+     "texto": "maçã.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_dente",
+     "texto": "dente.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_pinguim",
+     "texto": "pinguim.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_ponte",
+     "texto": "ponte.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_mundo",
+     "texto": "mundo.",
+     "copias": []
+    },
+    {
+     "nome": "palavra_banana",
+     "texto": "banana.",
+     "copias": []
+    }
+   ]
+  },
+  {
+   "voz": "pato",
+   "itens": [
+    {
+     "nome": "frase_pato_muito_bem",
+     "texto": "Muito bem!"
+    },
+    {
+     "nome": "frase_pato_parabens",
+     "texto": "Parabéns! Você conseguiu!"
+    },
+    {
+     "nome": "frase_pato_de_novo",
+     "texto": "Vamos tentar de novo?"
+    },
+    {
+     "nome": "frase_pato_onde_esta",
+     "texto": "Onde está o som?"
+    },
+    {
+     "nome": "frase_pato_escute",
+     "texto": "Escute!"
+    },
+    {
+     "nome": "frase_pato_repita",
+     "texto": "Agora fale você!"
+    },
+    {
+     "nome": "frase_pato_juntos",
+     "texto": "Vamos juntar os sons!"
+    },
+    {
+     "nome": "frase_pato_leia",
+     "texto": "Que palavra é essa?"
+    },
+    {
+     "nome": "frase_pato_descansar",
+     "texto": "Hora de descansar. Até amanhã!"
+    },
+    {
+     "nome": "frase_pato_ola",
+     "texto": "Oi! Vamos aprender?"
+    },
+    {
+     "nome": "intro_vogais",
+     "texto": "Oi! Eu sou o Pato. Vamos cantar as vogais!"
+    }
+   ]
+  },
+  {
+   "voz": "urso",
+   "itens": [
+    {
+     "nome": "frase_urso_muito_bem",
+     "texto": "Muito bem!"
+    },
+    {
+     "nome": "frase_urso_parabens",
+     "texto": "Parabéns! Você conseguiu!"
+    },
+    {
+     "nome": "frase_urso_de_novo",
+     "texto": "Vamos tentar de novo?"
+    },
+    {
+     "nome": "frase_urso_onde_esta",
+     "texto": "Onde está o som?"
+    },
+    {
+     "nome": "frase_urso_escute",
+     "texto": "Escute!"
+    },
+    {
+     "nome": "frase_urso_repita",
+     "texto": "Agora fale você!"
+    },
+    {
+     "nome": "frase_urso_juntos",
+     "texto": "Vamos juntar os sons!"
+    },
+    {
+     "nome": "frase_urso_leia",
+     "texto": "Que palavra é essa?"
+    },
+    {
+     "nome": "frase_urso_descansar",
+     "texto": "Hora de descansar. Até amanhã!"
+    },
+    {
+     "nome": "frase_urso_ola",
+     "texto": "Oi! Vamos aprender?"
+    },
+    {
+     "nome": "intro_zumbido",
+     "texto": "Oi! Eu sou o Urso. Meus sons fazem a boca vibrar. Mmmm!"
+    }
+   ]
+  },
+  {
+   "voz": "cachorro",
+   "itens": [
+    {
+     "nome": "frase_cachorro_muito_bem",
+     "texto": "Muito bem!"
+    },
+    {
+     "nome": "frase_cachorro_parabens",
+     "texto": "Parabéns! Você conseguiu!"
+    },
+    {
+     "nome": "frase_cachorro_de_novo",
+     "texto": "Vamos tentar de novo?"
+    },
+    {
+     "nome": "frase_cachorro_onde_esta",
+     "texto": "Onde está o som?"
+    },
+    {
+     "nome": "frase_cachorro_escute",
+     "texto": "Escute!"
+    },
+    {
+     "nome": "frase_cachorro_repita",
+     "texto": "Agora fale você!"
+    },
+    {
+     "nome": "frase_cachorro_juntos",
+     "texto": "Vamos juntar os sons!"
+    },
+    {
+     "nome": "frase_cachorro_leia",
+     "texto": "Que palavra é essa?"
+    },
+    {
+     "nome": "frase_cachorro_descansar",
+     "texto": "Hora de descansar. Até amanhã!"
+    },
+    {
+     "nome": "frase_cachorro_ola",
+     "texto": "Oi! Vamos aprender?"
+    },
+    {
+     "nome": "intro_sopro",
+     "texto": "Au au! Eu sou o Cachorro. Meus sons são de soprar e farejar!"
+    }
+   ]
+  },
+  {
+   "voz": "coelho",
+   "itens": [
+    {
+     "nome": "frase_coelho_muito_bem",
+     "texto": "Muito bem!"
+    },
+    {
+     "nome": "frase_coelho_parabens",
+     "texto": "Parabéns! Você conseguiu!"
+    },
+    {
+     "nome": "frase_coelho_de_novo",
+     "texto": "Vamos tentar de novo?"
+    },
+    {
+     "nome": "frase_coelho_onde_esta",
+     "texto": "Onde está o som?"
+    },
+    {
+     "nome": "frase_coelho_escute",
+     "texto": "Escute!"
+    },
+    {
+     "nome": "frase_coelho_repita",
+     "texto": "Agora fale você!"
+    },
+    {
+     "nome": "frase_coelho_juntos",
+     "texto": "Vamos juntar os sons!"
+    },
+    {
+     "nome": "frase_coelho_leia",
+     "texto": "Que palavra é essa?"
+    },
+    {
+     "nome": "frase_coelho_descansar",
+     "texto": "Hora de descansar. Até amanhã!"
+    },
+    {
+     "nome": "frase_coelho_ola",
+     "texto": "Oi! Vamos aprender?"
+    },
+    {
+     "nome": "intro_pulos",
+     "texto": "Oi! Eu sou o Coelho. Meus sons pulam: p! b! t!"
+    }
+   ]
+  },
+  {
+   "voz": "pinguim",
+   "itens": [
+    {
+     "nome": "frase_pinguim_muito_bem",
+     "texto": "Muito bem!"
+    },
+    {
+     "nome": "frase_pinguim_parabens",
+     "texto": "Parabéns! Você conseguiu!"
+    },
+    {
+     "nome": "frase_pinguim_de_novo",
+     "texto": "Vamos tentar de novo?"
+    },
+    {
+     "nome": "frase_pinguim_onde_esta",
+     "texto": "Onde está o som?"
+    },
+    {
+     "nome": "frase_pinguim_escute",
+     "texto": "Escute!"
+    },
+    {
+     "nome": "frase_pinguim_repita",
+     "texto": "Agora fale você!"
+    },
+    {
+     "nome": "frase_pinguim_juntos",
+     "texto": "Vamos juntar os sons!"
+    },
+    {
+     "nome": "frase_pinguim_leia",
+     "texto": "Que palavra é essa?"
+    },
+    {
+     "nome": "frase_pinguim_descansar",
+     "texto": "Hora de descansar. Até amanhã!"
+    },
+    {
+     "nome": "frase_pinguim_ola",
+     "texto": "Oi! Vamos aprender?"
+    },
+    {
+     "nome": "intro_nariz",
+     "texto": "Oi! Eu sou o Pinguim. Minhas vogais saem pelo nariz!"
+    }
+   ]
+  }
+ ]
+}

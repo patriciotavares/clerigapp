@@ -85,20 +85,19 @@ O app encontra o servidor sozinho na rede da casa. Se não encontrar, vá em **�
 
 **⚙️ Pais** (na tela inicial): perfis para cada filho, mostrar ou esconder IPA e letras, tempo de tela e servidor.
 
-## 5. Vozes naturais (Piper, grátis)
+## 5. Vozes naturais (ElevenLabs) — automático
 
-As vozes que vêm no APK são robóticas. Para trocar por uma voz neural brasileira natural, rode **uma vez** no servidor:
+As vozes do ElevenLabs já foram geradas: uma voz de narradora para os sons, sílabas e palavras,
+e uma voz própria para cada personagem (Pato, Urso, Cachorro, Coelho e Pinguim).
 
-```bash
-docker compose --profile vozes run --rm --build vozes
-```
+**Não precisa fazer nada:** na primeira vez que o servidor liga (`docker compose up -d --build`), ele baixa e corta
+esses áudios sozinho para `PASTA_DADOS/vozes/` (veja no log: `docker logs sons-magicos`). A TV passa a usar as vozes novas.
+Depois gere o APK de novo (passo 2) para elas irem também para dentro do app, funcionando até sem o servidor.
 
-Ele baixa a voz Piper (`pt_BR-faber-medium`) e gera uns 400 áudios em `PASTA_DADOS/vozes/`, com um tom diferente para cada personagem
-(o Pato e o Coelho mais agudos, o Urso mais grave). A TV passa a usar essas vozes assim que abrir o app de novo. Depois disso, gere o APK de novo
-(passo 2): ele já leva as vozes naturais para dentro, e assim a TV fica com elas mesmo sem o servidor.
-
-- Outra voz: `VOZ=pt_BR-cadu-medium docker compose --profile vozes run --rm vozes` (amostras em https://rhasspy.github.io/piper-samples/).
-- Os sons que "pulam" (p, b, t, d, k, g) continuam com a voz padrão, porque uma voz natural não consegue dizê-los sozinhos. Grave esses com a sua voz.
+- A lista do que foi gerado e onde cortar cada fala está em `servidor/vozes-elevenlabs.json`.
+- Os sons que "pulam" (p, b, t, d, k, g, tʃ, dʒ) e o "r" fraco (ɾ) não existem sozinhos numa voz natural:
+  esses continuam com a voz padrão. Grave-os com a sua voz (passo 6).
+- Alternativa gratuita e offline: `docker compose --profile vozes run --rm --build vozes` gera vozes com o Piper.
 
 ## 6. Gravar com a sua voz (recomendado!)
 

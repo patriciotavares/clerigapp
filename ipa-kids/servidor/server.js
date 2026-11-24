@@ -21,7 +21,7 @@ const DADOS = path.resolve(process.env.DADOS || path.join(__dirname, "..", "dado
 const DIR_AUDIO = path.join(DADOS, "audio");
 const DIR_PROG = path.join(DADOS, "progresso");
 const DIR_APK = path.join(DADOS, "apk");
-const DIR_VOZES = path.join(DADOS, "vozes"); // vozes naturais geradas pelo Piper
+const DIR_VOZES = path.join(DADOS, "vozes"); // vozes naturais (ElevenLabs ou Piper)
 for (const d of [DIR_AUDIO, DIR_PROG, DIR_APK, DIR_VOZES]) fs.mkdirSync(d, { recursive: true });
 
 const TIPOS = {
@@ -168,7 +168,45 @@ const servidor = http.createServer(async (req, res) => {
   }
 });
 
+// ---------- Vozes do ElevenLabs ----------
+// O arquivo vozes-elevenlabs.json lista os áudios gerados no ElevenLabs (um arquivo por lote)
+// e onde cortar cada fala. Na primeira vez que o servidor liga, ele baixa e corta tudo
+// para DADOS/vozes. Depois disso não precisa mais de internet.
+async function prepararVozesElevenLabs() {
+  const manifesto = path.join(WEB, "..", "ferramentas", "vozes-elevenlabs.json");
+  const alt = path.join(__dirname, "vozes-elevenlabs.json");
+  const arq = process.env.VOZES_MANIFESTO || (fs.existsSync(manifesto) ? manifesto : alt);
+  if (!fs.existsSync(arq)) return;
+  const m = JSON.parse(fs.readFileSync(arq, "utf8"));
+  const marca = path.join(DIR_VOZES, ".elevenlabs-" + (m.versao || 1));
+  if (fs.existsSync(marca)) return;
+  console.log("Preparando as vozes do ElevenLabs…");
+  let feitos = 0, erros = 0;
+  for (const lote of m.lotes) {
+    const tmp = path.join(os.tmpdir(), "lote-" + Math.random().toString(36).slice(2) + ".mp3");
+    try {
+      const r = await fetch(lote.url);
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      fs.writeFileSync(tmp, Buffer.from(await r.arrayBuffer()));
+    } catch (e) { console.error("  não consegui baixar um lote:", e.message); erros += lote.itens.length; continue; }
+    for (const [nomes, ini, fim] of lote.itens) {
+      const lista = Array.isArray(nomes) ? nomes : [nomes];
+      const destino = path.join(DIR_VOZES, lista[0] + ".mp3");
+      const r = spawnSync("ffmpeg", ["-y", "-loglevel", "error", "-ss", String(ini), "-to", String(fim), "-i", tmp,
+        "-af", "afade=t=in:d=0.02,areverse,afade=t=in:d=0.04,areverse,loudnorm=I=-16:TP=-1.5,adelay=60",
+        "-ac", "1", "-ar", "24000", "-codec:a", "libmp3lame", "-b:a", "64k", destino]);
+      if (r.status !== 0) { erros++; continue; }
+      for (const outro of lista.slice(1)) fs.copyFileSync(destino, path.join(DIR_VOZES, outro + ".mp3"));
+      feitos += lista.length;
+    }
+    fs.rmSync(tmp, { force: true });
+  }
+  if (!erros) fs.writeFileSync(marca, new Date().toISOString());
+  console.log(`Vozes do ElevenLabs prontas: ${feitos} áudios${erros ? `, ${erros} com erro (tento de novo no próximo início)` : ""}.`);
+}
+
 servidor.listen(PORTA, "0.0.0.0", () => {
+  prepararVozesElevenLabs().catch((e) => console.error("Vozes ElevenLabs:", e.message));
   const noDocker = fs.existsSync("/.dockerenv");
   const ips = noDocker ? ["IP-DO-SEU-SERVIDOR"] : Object.values(os.networkInterfaces()).flat().filter((i) => i && i.family === "IPv4" && !i.internal).map((i) => i.address);
   console.log(`Sons Mágicos rodando na porta ${PORTA}`);
