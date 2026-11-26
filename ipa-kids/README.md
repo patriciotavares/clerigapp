@@ -99,18 +99,26 @@ Depois gere o APK de novo (passo 2) para elas irem também para dentro do app, f
   esses continuam com a voz padrão. Grave-os com a sua voz (passo 6).
 - Alternativa gratuita e offline: `docker compose --profile vozes run --rm --build vozes` gera vozes com o Piper.
 
-## 6. Gravar com a sua voz (recomendado!)
+## 6. Gravar com a sua voz pelo celular (recomendado!)
 
-As vozes que vêm no app são sintetizadas (espeak-ng + MBROLA). **A voz da mãe ou do pai ensina muito melhor.**
-No celular, abra `http://IP-DO-SERVIDOR:8080/admin`:
+Na TV, entre em **⚙️ Pais** e desça até **No celular**: aponte a câmera do celular para o QR code
+(ou abra `https://IP-DO-SERVIDOR:8443/admin`). Como o certificado é do seu próprio servidor, o celular avisa
+"conexão não é particular": toque em **Avançado → Continuar**.
 
-- veja o progresso de cada criança;
-- para cada som, sílaba, palavra ou frase dos personagens: ouça o áudio padrão e **envie uma gravação** feita no gravador do celular.
-  O servidor converte e ajusta o volume sozinho, e a TV passa a usar a sua voz.
+- **🎙️ Gravar áudios:** procure o som, sílaba, palavra ou frase, toque em **🎙 Gravar**, fale, ouça e **Enviar**.
+  O servidor ajusta o volume e corta o silêncio; a TV usa a sua voz na hora.
+- **📊 Relatório:** minutos de uso por dia, sons dominados, sons que precisam de reforço e sugestões de brincadeiras.
 
-Dicas para gravar os sons isolados:
-- **Contínuos** (m, n, f, v, s, z, ʃ, ʒ, l, ʁ e as vogais): segure o som por 1 a 2 segundos, *sem vogal no fim* ("mmmm", não "mê").
-- **Oclusivas** (p, b, t, d, k, g): som curtinho, só o "estalo" ("p", não "pê").
+Dicas: sons que dá para segurar (vogais, M, N, F, S, CH…) — 1 a 2 segundos, sem vogal no fim ("mmmm").
+Sons que pulam (P, B, T, D, K, G) — só o estalo ("p", não "pê").
+
+## 7. O que mais tem no app
+
+- **Letras em MAIÚSCULAS** grandes, com o símbolo IPA pequeno embaixo (em Pais dá para trocar para minúsculas).
+- **Revisão inteligente:** o Assistir e os jogos repetem mais o que a criança erra e revisam o que ela já sabe em intervalos crescentes (1, 2, 4, 8, 16 dias).
+- **Jogos:** Ler (ver a palavra e achar a figura), **Monte a palavra** (juntar as sílabas na ordem) e **Álbum de figurinhas**.
+- **Horário de uso** e **tempo de tela** na área dos pais; fora do horário a turma "está descansando".
+- **↻ Última lição** na tela inicial.
 
 ---
 

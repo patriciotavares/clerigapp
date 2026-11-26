@@ -7,96 +7,266 @@
 <link rel="stylesheet" href="/css/app.css">
 <style>
   html, body { overflow: auto; height: auto; background: #eef6ff; }
-  body { max-width: 980px; margin: 0 auto; padding: 16px; font-size: 18px; cursor: auto; -webkit-user-select: text; user-select: text; }
-  h1 { font-size: 32px; margin: 8px 0; }
-  h2 { font-size: 24px; margin: 28px 0 8px; }
-  p { color: #5b6b84; line-height: 1.45; }
-  .linha { display: flex; align-items: center; gap: 10px; background: #fff; border-radius: 14px; padding: 10px 14px; margin: 6px 0; flex-wrap: wrap; }
-  .linha .ipa { font-size: 30px; font-weight: 700; color: #6c4cd8; min-width: 70px; }
-  .linha .nome { flex: 1; min-width: 160px; }
-  .linha .meu { color: #2fbf71; font-weight: 700; }
-  button, label.btn { font: inherit; font-size: 16px; border: 0; border-radius: 999px; padding: 8px 14px; background: #ffe08a; cursor: pointer; }
-  button.sec { background: #e6ecf5; }
+  body { max-width: 980px; margin: 0 auto; padding: 16px 16px 120px; font-size: 18px; cursor: auto; -webkit-user-select: text; user-select: text; }
+  h1 { font-size: 28px; margin: 8px 0; }
+  h2 { font-size: 23px; margin: 28px 0 10px; }
+  p { color: #5b6b84; line-height: 1.45; margin: 8px 0; }
+  .abas { display: flex; gap: 8px; position: sticky; top: 0; background: #eef6ff; padding: 8px 0; z-index: 5; }
+  .abas button { flex: 1; font-size: 17px; padding: 12px; border-radius: 999px; border: 0; background: #fff; font-weight: 700; font-family: inherit; color: inherit; }
+  .abas button.ativa { background: #ffb703; }
+  .secao { display: none; } .secao.ativa { display: block; }
+  .linha { display: flex; align-items: center; gap: 10px; background: #fff; border-radius: 14px; padding: 10px 12px; margin: 6px 0; flex-wrap: wrap; }
+  .linha .ipa { font-size: 26px; font-weight: 700; color: #6c4cd8; min-width: 54px; }
+  .linha .nome { flex: 1; min-width: 150px; }
+  .linha .meu { color: #2fbf71; font-weight: 700; font-size: 15px; }
+  .botoes { display: flex; gap: 6px; flex-wrap: wrap; }
+  button, label.btn { font: inherit; font-size: 16px; border: 0; border-radius: 999px; padding: 10px 14px; background: #e6ecf5; cursor: pointer; color: inherit; }
+  button.gravar { background: #ff6b6b; color: #fff; font-weight: 700; }
   input[type=file] { display: none; }
-  .relatorio { background: #fff; border-radius: 14px; padding: 12px 16px; margin: 6px 0; }
-  details summary { cursor: pointer; font-weight: 700; font-size: 20px; padding: 6px 0; }
-  .aviso { background: #fff7d6; border-radius: 14px; padding: 12px 16px; }
+  input[type=search] { width: 100%; font: inherit; font-size: 18px; padding: 12px 16px; border-radius: 999px; border: 2px solid #cfd8e6; margin: 6px 0 10px; }
+  details { background: #f7fbff; border-radius: 16px; padding: 4px 10px; margin: 8px 0; }
+  details summary { cursor: pointer; font-weight: 700; font-size: 19px; padding: 10px 2px; }
+  .aviso { background: #fff7d6; border-radius: 14px; padding: 12px 16px; margin: 10px 0; }
+  .cartao { background: #fff; border-radius: 18px; padding: 14px 16px; margin: 12px 0; box-shadow: 0 4px 14px rgba(35,48,70,.08); }
+  .cartao h3 { margin: 0 0 6px; font-size: 22px; }
+  .numeros { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; margin: 10px 0; }
+  .numero { background: #f1f5fb; border-radius: 12px; padding: 10px; text-align: center; }
+  .numero b { display: block; font-size: 26px; }
+  .barras { display: flex; align-items: flex-end; gap: 8px; height: 140px; padding: 6px 0; }
+  .barra { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; font-size: 13px; color: #5b6b84; }
+  .barra i { display: block; width: 100%; background: #6c4cd8; border-radius: 8px 8px 3px 3px; min-height: 3px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+  .chip { background: #ffe1e1; border-radius: 999px; padding: 6px 12px; font-weight: 700; }
+  .chip.bom { background: #d9f6e5; }
+  /* gravador */
+  #gravador { position: fixed; left: 0; right: 0; bottom: 0; background: #fff; box-shadow: 0 -8px 30px rgba(0,0,0,.18); border-radius: 24px 24px 0 0; padding: 18px 18px 26px; z-index: 20; display: none; }
+  #gravador.aberto { display: block; }
+  #gravador .titulo { font-weight: 700; font-size: 20px; margin-bottom: 4px; }
+  #gravador .dica { color: #5b6b84; font-size: 15px; margin-bottom: 12px; position: static; }
+  #btn-rec { width: 96px; height: 96px; border-radius: 50%; background: #ff6b6b; color: #fff; font-size: 40px; display: block; margin: 8px auto; }
+  #btn-rec.gravando { background: #c0392b; animation: pulsar 1s infinite; }
+  #tempo { text-align: center; font-size: 20px; font-variant-numeric: tabular-nums; }
+  #gravador .acoes { display: flex; gap: 10px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+  #gravador .acoes button { font-size: 18px; padding: 12px 20px; }
+  #enviar { background: #2fbf71; color: #fff; font-weight: 700; }
 </style>
 </head>
 <body>
-<h1>🐧 Sons Mágicos — Área dos pais</h1>
-<p>Aqui você pode trocar qualquer áudio do app por uma gravação <b>com a sua voz</b>. Grave no celular (gravador de voz) e envie o arquivo.
-   Para os sons isolados, fale o som sozinho e prolongado (ex.: “mmmm”, “ssss”), sem vogal no fim. Para as oclusivas (p, b, t…) faça o som curtinho.</p>
-<div class="aviso">📺 Para instalar na TV, abra o app <b>Downloader</b> na TV e digite: <b id="apk"></b></div>
+<h1>🐧 Sons Mágicos — Pais</h1>
+<div class="abas">
+  <button data-aba="relatorio" class="ativa">📊 Relatório</button>
+  <button data-aba="audios">🎙️ Gravar áudios</button>
+  <button data-aba="tv">📺 TV</button>
+</div>
 
-<h2>Progresso das crianças</h2>
-<div id="relatorio">Carregando…</div>
+<!-- ============ Relatório ============ -->
+<div class="secao ativa" id="relatorio"><p>Carregando…</p></div>
 
-<h2>Áudios</h2>
-<div id="lista"></div>
+<!-- ============ Áudios ============ -->
+<div class="secao" id="audios">
+  <div class="aviso" id="aviso-https" hidden></div>
+  <p>Troque qualquer áudio do app pela <b>sua voz</b>: toque em <b>🎙 Gravar</b>, fale e envie. A TV passa a usar a sua gravação na hora.</p>
+  <p><b>Dicas:</b> sons que dá para segurar (vogais, M, N, F, S, CH…) — segure 1 a 2 segundos, sem vogal no fim (“mmmm”, não “mê”). Sons que pulam (P, B, T, D, K, G) — só o estalo, bem curtinho (“p”, não “pê”).</p>
+  <input type="search" id="busca" placeholder="🔎 Procurar (ex.: pato, mmm, frase do urso)">
+  <div id="lista"></div>
+</div>
+
+<!-- ============ TV ============ -->
+<div class="secao" id="tv">
+  <div class="cartao"><h3>📲 Instalar ou atualizar na TV</h3>
+    <p>No app <b>Downloader</b> da TV, digite: <b id="apk"></b></p>
+    <p>As telas novas do app chegam sozinhas pelo servidor; só é preciso reinstalar quando avisarmos.</p></div>
+</div>
+
+<!-- ============ Gravador ============ -->
+<div id="gravador">
+  <div class="titulo" id="g-titulo"></div>
+  <div class="dica" id="g-dica"></div>
+  <button id="btn-rec" aria-label="Gravar">🎙</button>
+  <div id="tempo">Toque para gravar</div>
+  <audio id="previa" controls hidden style="width:100%;margin-top:10px"></audio>
+  <div class="acoes">
+    <button id="ouvir-padrao">▶ Ouvir o atual</button>
+    <button id="enviar" hidden>✔ Enviar</button>
+    <button id="cancelar">Fechar</button>
+  </div>
+  <label class="btn" style="display:block;text-align:center;margin-top:10px">ou escolher um arquivo de áudio<input type="file" id="arquivo" accept="audio/*" capture></label>
+</div>
 
 <script src="/js/curriculo.js"></script>
 <script>
 const C = window.CURRICULO;
-document.getElementById("apk").textContent = location.origin + "/apk";
-let meus = new Set();
-let vozes = new Set();
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+document.getElementById("apk").textContent = location.protocol === "https:" ? `http://${location.hostname}:8080/apk` : location.origin + "/apk";
 
+/* ---------------- Abas ---------------- */
+document.querySelectorAll(".abas button").forEach((b) => b.onclick = () => {
+  document.querySelectorAll(".abas button").forEach((x) => x.classList.toggle("ativa", x === b));
+  document.querySelectorAll(".secao").forEach((s) => s.classList.toggle("ativa", s.id === b.dataset.aba));
+});
+
+/* ---------------- Áudios ---------------- */
+let meus = new Set(), vozes = new Set();
 async function atualizar() {
   const a = await (await fetch("/api/audios")).json();
   meus = new Set(a.arquivos); vozes = new Set(a.vozes || []);
   document.querySelectorAll("[data-arq]").forEach((l) => {
     const tem = meus.has(l.dataset.arq);
     l.querySelector(".meu").textContent = tem ? "✔ sua voz" : "";
-    l.querySelector(".apagar").style.display = tem ? "" : "none";
+    l.querySelector(".apagar").hidden = !tem;
   });
 }
-function tocar(url) { new Audio(url + "?t=" + Date.now()).play(); }
+function urlAtual(arq) {
+  if (meus.has(arq)) return "/personalizado/audio/" + arq + "?t=" + Date.now();
+  if (vozes.has(arq)) return "/vozes/audio/" + arq;
+  return "/audio/" + arq;
+}
+function tocar(url) { new Audio(url).play(); }
 
-function linha(arq, ipa, nome) {
+const itens = [];
+function linha(arq, ipa, nome, busca) {
   const d = document.createElement("div");
-  d.className = "linha"; d.dataset.arq = arq;
-  d.innerHTML = `<span class="ipa">${ipa || ""}</span><span class="nome">${nome}</span><span class="meu"></span>
-    <button class="sec" data-a="padrao">▶ padrão</button>
-    <button class="sec" data-a="meu">▶ minha voz</button>
-    <label class="btn">⬆ enviar gravação<input type="file" accept="audio/*"></label>
-    <button class="sec apagar" data-a="apagar">🗑</button>`;
-  d.querySelector('[data-a=padrao]').onclick = () => tocar((vozes.has(arq) ? "/vozes/audio/" : "/audio/") + arq);
-  d.querySelector('[data-a=meu]').onclick = () => meus.has(arq) ? tocar("/personalizado/audio/" + arq) : alert("Ainda não tem gravação sua para este áudio.");
-  d.querySelector('[data-a=apagar]').onclick = async () => { if (confirm("Voltar para o áudio padrão?")) { await fetch("/api/audios/" + arq, { method: "DELETE" }); atualizar(); } };
-  d.querySelector("input").onchange = async (e) => {
-    const f = e.target.files[0]; if (!f) return;
-    const r = await fetch("/api/audios/" + arq, { method: "PUT", body: f });
-    alert(r.ok ? "Gravação enviada! A TV usa a nova voz na próxima vez que abrir o app." : "Erro ao enviar.");
-    atualizar();
-  };
+  d.className = "linha"; d.dataset.arq = arq; d.dataset.busca = (busca + " " + nome + " " + ipa).toLowerCase();
+  d.innerHTML = `<span class="ipa">${esc(ipa || "")}</span><span class="nome">${esc(nome)} <span class="meu"></span></span>
+    <span class="botoes"><button data-a="ouvir">▶</button><button class="gravar" data-a="gravar">🎙 Gravar</button><button class="apagar" data-a="apagar" hidden title="Voltar ao padrão">🗑</button></span>`;
+  d.querySelector('[data-a=ouvir]').onclick = () => tocar(urlAtual(arq));
+  d.querySelector('[data-a=gravar]').onclick = () => abrirGravador(arq, nome, ipa);
+  d.querySelector('[data-a=apagar]').onclick = async () => { if (confirm("Apagar sua gravação e voltar à voz padrão?")) { await fetch("/api/audios/" + arq, { method: "DELETE" }); atualizar(); } };
+  itens.push(d);
   return d;
 }
-function grupo(titulo, itens) {
-  const det = document.createElement("details");
-  det.innerHTML = `<summary>${titulo}</summary>`;
-  itens.forEach((i) => det.appendChild(linha(...i)));
+function grupo(titulo, lista, aberto) {
+  const det = document.createElement("details"); if (aberto) det.open = true;
+  det.innerHTML = `<summary>${esc(titulo)}</summary>`;
+  lista.forEach((i) => det.appendChild(linha(...i)));
   document.getElementById("lista").appendChild(det);
 }
-
+const escrita = (p) => p.escrita || p.s.map((x) => x[0]).join("");
 for (const u of C.unidades) {
   grupo(`${C.personagens[u.personagem].nome}: ${u.titulo}`, [
-    [`intro_${u.id}.mp3`, "", `Apresentação: “${u.frase}”`],
-    ...u.sons.map((s) => [`som_${s.id}.mp3`, "/" + s.ipa + "/", `Som isolado (${s.letras}) — ${s.dica}`]),
-  ]);
+    [`intro_${u.id}.mp3`, "", `Apresentação: “${u.frase}”`, u.titulo],
+    ...u.sons.map((s) => [`som_${s.id}.mp3`, "/" + s.ipa + "/", `Som ${s.letras.toUpperCase()} — ${s.dica}`, s.letras + " " + s.id]),
+  ], u.id === "pulos");
 }
-grupo("Sílabas", C.silabas.flatMap((g) => g.itens.map(([o, ipa]) => [`silaba_${g.c}_${o}.mp3`, "/" + ipa + "/", `Sílaba “${o}”`])));
-grupo("Palavras", C.palavras.map((p) => [`palavra_${p.id}.mp3`, p.emoji || "🐾", `Palavra “${p.escrita || p.s.map((x) => x[0]).join("")}”`]));
-grupo("Sílabas dentro das palavras", C.palavras.flatMap((p) => p.s.map(([o, ipa], i) => [`psil_${p.id}_${i}.mp3`, "/" + ipa + "/", `“${o}” em ${p.escrita || p.s.map((x) => x[0]).join("")}`])));
-grupo("Frases dos personagens", Object.keys(C.personagens).flatMap((pid) => Object.entries(C.frases).map(([k, t]) => [`frase_${pid}_${k}.mp3`, "", `${C.personagens[pid].nome}: “${t}”`])));
+grupo("Sílabas", C.silabas.flatMap((g) => g.itens.map(([o, ipa]) => [`silaba_${g.c}_${o}.mp3`, "/" + ipa + "/", `Sílaba ${o.toUpperCase()}`, o])));
+grupo("Palavras", C.palavras.map((p) => [`palavra_${p.id}.mp3`, p.emoji || "🐾", `Palavra ${escrita(p).toUpperCase()}`, escrita(p) + " " + p.id]));
+grupo("Sílabas dentro das palavras", C.palavras.flatMap((p) => p.s.map(([o, ipa], i) => [`psil_${p.id}_${i}.mp3`, "/" + ipa + "/", `${o.toUpperCase()} em ${escrita(p).toUpperCase()}`, o + " " + escrita(p)])));
+grupo("Frases dos personagens", Object.keys(C.personagens).flatMap((pid) => Object.entries(C.frases).map(([k, t]) => [`frase_${pid}_${k}.mp3`, "", `${C.personagens[pid].nome}: “${t}”`, "frase " + pid + " " + C.personagens[pid].nome])));
 atualizar();
 
+$("#busca").oninput = (e) => {
+  const q = e.target.value.trim().toLowerCase();
+  document.querySelectorAll("#lista details").forEach((det) => {
+    let algum = false;
+    det.querySelectorAll(".linha").forEach((l) => { const ok = !q || l.dataset.busca.includes(q); l.hidden = !ok; algum ||= ok; });
+    det.hidden = !algum; if (q) det.open = algum;
+  });
+};
+
+/* ---------------- Gravador ---------------- */
+const podeGravar = window.isSecureContext && navigator.mediaDevices && window.MediaRecorder;
+if (!podeGravar) {
+  const av = $("#aviso-https"); av.hidden = false;
+  const https = `https://${location.hostname}:8443/admin`;
+  av.innerHTML = location.protocol === "https:"
+    ? "Este navegador não permite gravar aqui. Use o botão <b>escolher um arquivo</b> para enviar uma gravação do gravador do celular."
+    : `Para gravar direto pelo celular, abra a versão segura: <a href="${https}"><b>${https}</b></a><br>
+       Se aparecer “conexão não é particular”, toque em <b>Avançado → Continuar</b> (é o seu próprio servidor).<br>
+       Ou use <b>escolher um arquivo</b> para enviar uma gravação.`;
+}
+let atual = null, recorder = null, pedacos = [], blob = null, cronometro = null, stream = null;
+function abrirGravador(arq, nome, ipa) {
+  atual = arq; blob = null;
+  $("#g-titulo").textContent = nome.split(" — ")[0];
+  $("#g-dica").textContent = (ipa ? ipa + " · " : "") + (nome.split(" — ")[1] || "");
+  $("#previa").hidden = true; $("#enviar").hidden = true;
+  $("#tempo").textContent = podeGravar ? "Toque no microfone para gravar" : "Escolha um arquivo de áudio abaixo";
+  $("#btn-rec").hidden = !podeGravar;
+  $("#gravador").classList.add("aberto");
+}
+function fecharGravador() {
+  if (recorder && recorder.state === "recording") recorder.stop();
+  if (stream) stream.getTracks().forEach((t) => t.stop());
+  stream = null; $("#gravador").classList.remove("aberto");
+}
+$("#cancelar").onclick = fecharGravador;
+$("#ouvir-padrao").onclick = () => tocar(urlAtual(atual));
+$("#btn-rec").onclick = async () => {
+  if (recorder && recorder.state === "recording") { recorder.stop(); return; }
+  try {
+    stream = stream || await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+  } catch (e) { alert("Não consegui usar o microfone: " + e.message); return; }
+  pedacos = [];
+  recorder = new MediaRecorder(stream);
+  recorder.ondataavailable = (e) => e.data.size && pedacos.push(e.data);
+  recorder.onstop = () => {
+    clearInterval(cronometro);
+    $("#btn-rec").classList.remove("gravando"); $("#btn-rec").textContent = "🎙";
+    blob = new Blob(pedacos, { type: recorder.mimeType || "audio/webm" });
+    const pv = $("#previa"); pv.src = URL.createObjectURL(blob); pv.hidden = false;
+    $("#enviar").hidden = false; $("#tempo").textContent = "Ouça abaixo. Ficou bom? Toque em Enviar.";
+  };
+  recorder.start();
+  const ini = Date.now();
+  $("#btn-rec").classList.add("gravando"); $("#btn-rec").textContent = "■";
+  cronometro = setInterval(() => { const s = (Date.now() - ini) / 1000; $("#tempo").textContent = "Gravando… " + s.toFixed(1) + "s (toque para parar)"; if (s > 30) recorder.stop(); }, 100);
+};
+async function enviar(corpo) {
+  $("#tempo").textContent = "Enviando…";
+  const r = await fetch("/api/audios/" + atual, { method: "PUT", body: corpo });
+  if (r.ok) { $("#tempo").textContent = "✅ Pronto! A TV já usa a sua voz."; $("#enviar").hidden = true; await atualizar(); setTimeout(fecharGravador, 1200); }
+  else $("#tempo").textContent = "❌ Erro ao enviar. Tente de novo.";
+}
+$("#enviar").onclick = () => blob && enviar(blob);
+$("#arquivo").onchange = (e) => { const f = e.target.files[0]; if (f) enviar(f); e.target.value = ""; };
+
+/* ---------------- Relatório ---------------- */
+const SONS = {}; C.unidades.forEach((u) => u.sons.forEach((s) => SONS[s.id] = s));
+const PAL = {}; C.palavras.forEach((p) => PAL[p.id] = p);
+function diasRecentes(n) {
+  const out = [];
+  for (let i = n - 1; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i);
+    out.push([`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`, d]); }
+  return out;
+}
+const semana = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
+function relatorio(p) {
+  const dias = p.dias || {};
+  const ult7 = diasRecentes(7);
+  const min = ult7.map(([k]) => Math.round(((dias[k] || {}).s || 0) / 60));
+  const maxMin = Math.max(10, ...min);
+  const tot = ult7.reduce((a, [k]) => { const d = dias[k] || {}; a.a += d.a || 0; a.e += d.e || 0; return a; }, { a: 0, e: 0 });
+  const sons = p.sons || {};
+  const dominados = Object.entries(sons).filter(([, m]) => (m.caixa || 0) >= 3).map(([id]) => SONS[id]).filter(Boolean);
+  const dificeis = Object.entries(sons).filter(([, m]) => (m.erros || 0) > (m.acertos || 0)).map(([id]) => SONS[id]).filter(Boolean);
+  const vistos = Object.keys(sons).length, total = Object.keys(SONS).length;
+  const figurinhas = C.palavras.filter((w) => ((p.leitura || {})[w.id] || {}).acertos || ((p.monte || {})[w.id] || {}).acertos).length;
+  const palErradas = Object.entries({ ...(p.leitura || {}) }).filter(([, m]) => (m.erros || 0) > (m.acertos || 0)).map(([id]) => PAL[id]).filter(Boolean);
+  const dicas = [];
+  if (dificeis.length) dicas.push(`Brinque fora da TV com ${dificeis.slice(0, 3).map((s) => "<b>" + s.letras.toUpperCase() + "</b> (" + s.dica.split(":")[0].toLowerCase() + ")").join(", ")}.`);
+  if (vistos < total) dicas.push(`Ainda faltam ${total - vistos} sons para conhecer — o <b>Assistir</b> apresenta um som novo de cada vez.`);
+  if (palErradas.length) dicas.push(`Leia junto: ${palErradas.slice(0, 4).map((w) => "<b>" + (w.escrita || w.s.map((x) => x[0]).join("")).toUpperCase() + "</b>").join(", ")}.`);
+  if (min.reduce((a, b) => a + b, 0) === 0) dicas.push("Sem uso nos últimos 7 dias.");
+  return `<div class="cartao"><h3>👧 ${esc(p.perfil || "Criança")}</h3>
+    <p>Últimos 7 dias</p>
+    <div class="barras">${ult7.map(([k, d], i) => `<div class="barra"><span>${min[i]}′</span><i style="height:${Math.round(min[i] / maxMin * 100)}%"></i><span>${semana[d.getDay()]}</span></div>`).join("")}</div>
+    <div class="numeros">
+      <div class="numero"><b>${min.reduce((a, b) => a + b, 0)} min</b>de uso</div>
+      <div class="numero"><b>${vistos}/${total}</b>sons vistos</div>
+      <div class="numero"><b>${dominados.length}</b>sons dominados</div>
+      <div class="numero"><b>${tot.a}</b>acertos</div>
+      <div class="numero"><b>${tot.e}</b>erros</div>
+      <div class="numero"><b>${figurinhas}/${C.palavras.length}</b>figurinhas</div>
+    </div>
+    ${dominados.length ? `<p>✅ Já domina:</p><div class="chips">${dominados.map((s) => `<span class="chip bom">${esc(s.letras.toUpperCase())} /${esc(s.ipa)}/</span>`).join("")}</div>` : ""}
+    ${dificeis.length ? `<p>💪 Precisa de reforço:</p><div class="chips">${dificeis.map((s) => `<span class="chip">${esc(s.letras.toUpperCase())} /${esc(s.ipa)}/</span>`).join("")}</div>` : ""}
+    ${dicas.length ? `<p>💡 ${dicas.join("<br>💡 ")}</p>` : ""}
+    <p style="font-size:14px">Última vez: ${p.atualizado ? new Date(p.atualizado).toLocaleString("pt-BR") : "-"}</p></div>`;
+}
 (async () => {
   const lista = await (await fetch("/api/relatorio")).json();
-  const total = Object.values(C.unidades).reduce((n, u) => n + u.sons.length, 0);
-  document.getElementById("relatorio").innerHTML = lista.length ? lista.map((p) => `<div class="relatorio"><b>${p.perfil}</b> — ${Object.keys(p.sons || {}).length}/${total} sons ·
-    ${Object.keys(p.silabas || {}).length} sílabas · ${Object.keys(p.palavras || {}).length} palavras · ${Object.keys(p.leitura || {}).length} leituras · ${p.estrelas || 0} ★
-    <br><small>última vez: ${p.atualizado ? new Date(p.atualizado).toLocaleString("pt-BR") : "-"}</small></div>`).join("") : "<p>Ainda sem progresso salvo.</p>";
+  $("#relatorio").innerHTML = lista.length ? lista.map(relatorio).join("") : "<p>Ainda sem progresso salvo. Use o app na TV e volte aqui.</p>";
 })();
 </script>
 </body>

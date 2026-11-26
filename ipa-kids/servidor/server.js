@@ -10,12 +10,16 @@
  */
 "use strict";
 const http = require("node:http");
+const https = require("node:https");
 const fs = require("node:fs");
 const path = require("node:path");
 const os = require("node:os");
 const { spawnSync } = require("node:child_process");
 
 const PORTA = Number(process.env.PORTA || 8080);
+// HTTPS: o navegador do celular só deixa usar o microfone em páginas seguras (https).
+// O certificado é criado sozinho (autoassinado) e guardado em DADOS/https.
+const PORTA_HTTPS = Number(process.env.PORTA_HTTPS || 8443);
 const WEB = path.resolve(process.env.WEB || path.join(__dirname, "..", "web"));
 const DADOS = path.resolve(process.env.DADOS || path.join(__dirname, "..", "dados"));
 const DIR_AUDIO = path.join(DADOS, "audio");
@@ -72,7 +76,7 @@ function dentroDe(base, rel) {
   return alvo === base || alvo.startsWith(base + path.sep) ? alvo : null;
 }
 
-const servidor = http.createServer(async (req, res) => {
+async function atender(req, res) {
   cors(res);
   if (req.method === "OPTIONS") { res.writeHead(204); return res.end(); }
   let url;
@@ -81,12 +85,14 @@ const servidor = http.createServer(async (req, res) => {
 
   try {
     // ---------- API ----------
-    if (p === "/api/ping") return json(res, 200, { app: "sons-magicos", versao: 1, nome: os.hostname() });
+    if (p === "/api/ping") return json(res, 200, { app: "sons-magicos", versao: 2, nome: os.hostname(), https: httpsAtivo ? PORTA_HTTPS : null });
 
     if (p === "/api/audios") {
       const arquivos = fs.readdirSync(DIR_AUDIO).filter(nomeSeguro);
       const vozes = fs.readdirSync(DIR_VOZES).filter((f) => nomeSeguro(f) && f.endsWith(".mp3"));
-      return json(res, 200, { arquivos, vozes });
+      const versoes = {};
+      for (const f of arquivos) { try { versoes[f] = Math.round(fs.statSync(path.join(DIR_AUDIO, f)).mtimeMs); } catch { /* ok */ } }
+      return json(res, 200, { arquivos, vozes, versoes });
     }
     let m;
     if ((m = /^\/api\/audios\/([^/]+)$/.exec(p))) {
@@ -166,7 +172,27 @@ const servidor = http.createServer(async (req, res) => {
     console.error(e);
     return json(res, 500, { erro: String(e.message || e) });
   }
-});
+}
+const servidor = http.createServer(atender);
+
+// ---------- HTTPS para o celular (microfone) ----------
+let httpsAtivo = false;
+function iniciarHttps() {
+  const dir = path.join(DADOS, "https");
+  const chave = path.join(dir, "chave.pem"), cert = path.join(dir, "certificado.pem");
+  try {
+    fs.mkdirSync(dir, { recursive: true });
+    if (!fs.existsSync(chave) || !fs.existsSync(cert)) {
+      const r = spawnSync("openssl", ["req", "-x509", "-newkey", "rsa:2048", "-nodes", "-days", "3650",
+        "-keyout", chave, "-out", cert, "-subj", "/CN=sons-magicos"], { encoding: "utf8" });
+      if (r.status !== 0) { console.log("HTTPS desligado (sem openssl):", (r.stderr || r.error || "").toString().slice(0, 200)); return; }
+    }
+    https.createServer({ key: fs.readFileSync(chave), cert: fs.readFileSync(cert) }, atender)
+      .on("error", (e) => console.log("HTTPS desligado:", e.message))
+      .listen(PORTA_HTTPS, "0.0.0.0", () => { httpsAtivo = true; console.log(`  Celular (gravar áudios): https://IP-DO-SEU-SERVIDOR:${PORTA_HTTPS}/admin`); });
+  } catch (e) { console.log("HTTPS desligado:", e.message); }
+}
+iniciarHttps();
 
 // ---------- Vozes do ElevenLabs ----------
 // O arquivo vozes-elevenlabs.json lista os áudios gerados no ElevenLabs (um arquivo por lote)

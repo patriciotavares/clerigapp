@@ -68,29 +68,70 @@ const config = Object.assign({
   servidor: "",         // ex.: http://192.168.0.10:8080
   perfis: ["Criança 1"],
   perfil: "Criança 1",
+  maiusculas: true,     // letras em MAIÚSCULAS (a criança ainda não conhece as minúsculas)
+  horario: "sempre",    // horários em que o app pode ser usado
 }, lerLocal("config", {}));
 function salvarConfig() { salvarLocal("config", config); aplicarVisual(); }
 function aplicarVisual() {
   palco.classList.toggle("esconder-ipa", !config.mostrarIPA);
   palco.classList.toggle("esconder-escrita", !config.mostrarEscrita);
+  palco.classList.toggle("maiusculas", config.maiusculas !== false);
 }
+// As letras aparecem em MAIÚSCULAS pelo CSS (classe "maiusculas" no palco), assim a troca na área dos pais vale para todas as telas.
+const letraPrincipal = (s) => s.letras.split(",")[0].replace(/\s*\(.*\)/, "").trim();
 
 let progresso = novoProgresso();
-function novoProgresso() { return { sons: {}, silabas: {}, palavras: {}, leitura: {}, estrelas: 0, atualizado: 0 }; }
+function novoProgresso() { return { sons: {}, silabas: {}, palavras: {}, leitura: {}, monte: {}, dias: {}, ultima: null, estrelas: 0, atualizado: 0 }; }
 function carregarProgresso() { progresso = Object.assign(novoProgresso(), lerLocal("progresso:" + config.perfil, {})); }
-function marcar(tipo, id, acertou) {
-  const m = progresso[tipo][id] || (progresso[tipo][id] = { vistos: 0, acertos: 0 });
-  if (acertou === undefined) m.vistos++; else if (acertou) { m.acertos++; progresso.estrelas++; }
+function salvarProgresso() {
   progresso.atualizado = Date.now();
   salvarLocal("progresso:" + config.perfil, progresso);
   enviarProgresso();
 }
+// Registro do dia (tempo de uso, acertos e erros) para o relatório dos pais
+function hojeChave() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; }
+function dia() {
+  const dias = progresso.dias || (progresso.dias = {});
+  const k = hojeChave();
+  if (!dias[k]) {
+    dias[k] = { s: 0, a: 0, e: 0 };
+    const chaves = Object.keys(dias).sort();
+    while (chaves.length > 90) delete dias[chaves.shift()]; // guarda ~3 meses
+  }
+  return dias[k];
+}
+/*
+ * Revisão inteligente (repetição espaçada, estilo "caixas de Leitner"):
+ * cada acerto de primeira sobe o item uma caixa (revisar depois de 1, 2, 4, 8, 16 dias);
+ * um erro volta o item para a caixa 0 (revisar logo).
+ */
+const INTERVALO_DIAS = [0, 1, 2, 4, 8, 16];
+function marcar(tipo, id, acertou) {
+  const grupo = progresso[tipo] || (progresso[tipo] = {});
+  const m = grupo[id] || (grupo[id] = { vistos: 0, acertos: 0, erros: 0, caixa: 0, ultimo: 0 });
+  if (acertou === undefined) m.vistos++;
+  else if (acertou) { m.acertos++; m.caixa = Math.min(INTERVALO_DIAS.length - 1, (m.caixa || 0) + 1); progresso.estrelas++; dia().a++; }
+  else { m.erros = (m.erros || 0) + 1; m.caixa = 0; dia().e++; }
+  m.ultimo = Date.now();
+  salvarProgresso();
+}
+function vencido(m) { return !m || Date.now() - (m.ultimo || 0) >= INTERVALO_DIAS[m.caixa || 0] * 864e5; }
+function fraco(m) { return m && (m.erros || 0) > (m.acertos || 0); }
+// Prioridade para revisar: primeiro os que a criança erra, depois os vencidos mais antigos
+function paraRevisar(tipo, ids) {
+  const g = progresso[tipo] || {};
+  return ids.filter((id) => g[id] && (fraco(g[id]) || vencido(g[id])))
+    .sort((a, b) => (fraco(g[b]) - fraco(g[a])) || ((g[a].ultimo || 0) - (g[b].ultimo || 0)));
+}
+function lembrarUltima(nome, args) { progresso.ultima = { nome, args }; salvarLocal("progresso:" + config.perfil, progresso); }
 carregarProgresso();
 aplicarVisual();
 
 /* ======================= Servidor caseiro ======================= */
 let servidor = null;              // URL base do servidor que respondeu
 let audiosPersonalizados = new Set(); // gravações dos pais (/admin)
+let versoesAudio = {};                // versão de cada gravação (para a TV não usar a antiga em cache)
+let infoServidor = {};
 let vozesNaturais = new Set();        // vozes Piper geradas no servidor
 
 function candidatosServidor() {
@@ -109,13 +150,15 @@ async function conectarServidor() {
   for (const base of candidatosServidor()) {
     try {
       const r = await buscar(base + "/api/ping");
-      if (r.ok && (await r.json()).app === "sons-magicos") { servidor = base; break; }
+      const info = r.ok ? await r.json() : {};
+      if (info.app === "sons-magicos") { servidor = base; infoServidor = info; break; }
     } catch { /* tenta o próximo */ }
   }
   if (!servidor) return false;
   try {
     const a = await (await buscar(servidor + "/api/audios")).json();
     audiosPersonalizados = new Set(a.arquivos || []);
+    versoesAudio = a.versoes || {};
     vozesNaturais = new Set(a.vozes || []);
   } catch { /* ok */ }
   try {
@@ -146,7 +189,7 @@ player.preload = "auto";
 let tocandoResolve = null;
 function urlAudio(nome) {
   const arq = nome + ".mp3";
-  if (servidor && audiosPersonalizados.has(arq)) return servidor + "/personalizado/audio/" + arq;
+  if (servidor && audiosPersonalizados.has(arq)) return servidor + "/personalizado/audio/" + arq + "?v=" + (versoesAudio[arq] || 0);
   if (servidor && vozesNaturais.has(arq)) return servidor + "/vozes/audio/" + arq;
   return "audio/" + arq;
 }
@@ -171,8 +214,33 @@ const pilha = [];
 let telaAtual = null;
 function vivo(t) { return t === token; }
 
+/* ---------- Horários permitidos ---------- */
+const HORARIOS = {
+  sempre: { nome: "Sempre", faixas: [[0, 24]] },
+  manha: { nome: "Manhã (8h–12h)", faixas: [[8, 12]] },
+  tarde: { nome: "Tarde (14h–18h)", faixas: [[14, 18]] },
+  manha_tarde: { nome: "Manhã e tarde", faixas: [[8, 12], [14, 18]] },
+  dia: { nome: "8h às 19h", faixas: [[8, 19]] },
+};
+function horarioPermitido() {
+  const h = new Date().getHours() + new Date().getMinutes() / 60;
+  return (HORARIOS[config.horario] || HORARIOS.sempre).faixas.some(([a, b]) => h >= a && h < b);
+}
+const TELAS_LIVRES = new Set(["pais", "foraHorario"]);
+const TELAS_LICAO = new Set(["som", "silabas", "palavra", "monte"]);
+
+/* ---------- Tempo de uso (para o relatório dos pais) ---------- */
+let ultimaAtividade = Date.now();
+["keydown", "click"].forEach((ev) => document.addEventListener(ev, () => { ultimaAtividade = Date.now(); }, true));
+setInterval(() => {
+  const ativo = document.visibilityState !== "hidden" && (modoAssistir || Date.now() - ultimaAtividade < 3 * 60000);
+  if (ativo && telaAtual && !TELAS_LIVRES.has(telaAtual.nome)) { dia().s += 30; salvarProgresso(); }
+}, 30000);
+
 function irPara(nome, args = {}, { empilhar = true } = {}) {
   pararAudio();
+  if (!TELAS_LIVRES.has(nome) && !horarioPermitido()) { nome = "foraHorario"; args = {}; empilhar = false; pilha.length = 0; }
+  if (TELAS_LICAO.has(nome)) lembrarUltima(nome, args);
   if (empilhar && telaAtual) pilha.push(telaAtual);
   telaAtual = { nome, args };
   token++;
@@ -197,10 +265,10 @@ function focarPrimeiro(raiz) {
 }
 
 /* ---------- Navegação espacial com as setas ---------- */
-function mover(direcao) {
+function mover(direcao, origem = document.activeElement) {
   const focaveis = $$(".foco").filter((e) => e.offsetParent !== null && !e.disabled);
   if (!focaveis.length) return;
-  const atual = document.activeElement && focaveis.includes(document.activeElement) ? document.activeElement : null;
+  const atual = origem && focaveis.includes(origem) ? origem : null;
   if (!atual) { focaveis[0].focus(); return; }
   const r0 = atual.getBoundingClientRect();
   const c0 = { x: r0.left + r0.width / 2, y: r0.top + r0.height / 2 };
@@ -231,8 +299,11 @@ document.addEventListener("keydown", (ev) => {
   const emCampo = document.activeElement && document.activeElement.tagName === "INPUT";
   if (k === "ArrowLeft" && !emCampo) { ev.preventDefault(); mover("esquerda"); }
   else if (k === "ArrowRight" && !emCampo) { ev.preventDefault(); mover("direita"); }
-  else if (k === "ArrowUp") { ev.preventDefault(); if (emCampo) document.activeElement.blur(); mover("cima"); }
-  else if (k === "ArrowDown") { ev.preventDefault(); if (emCampo) document.activeElement.blur(); mover("baixo"); }
+  else if (k === "ArrowUp" || k === "ArrowDown") {
+    ev.preventDefault();
+    // ao focar o próximo item, o campo de texto perde o foco sozinho; se não houver próximo, o foco fica onde está
+    mover(k === "ArrowUp" ? "cima" : "baixo");
+  }
   else if ((k === "Enter" || k === " ") && !emCampo) {
     ev.preventDefault();
     const a = document.activeElement; if (a && a.classList.contains("foco")) a.click();
@@ -302,7 +373,7 @@ TELAS.inicio = (tela) => {
     const per = C.personagens[u.personagem];
     const feitos = u.sons.filter((s) => progresso.sons[s.id]).length;
     return `<div class="bloco foco" tabindex="0" data-unidade="${u.id}" style="background:linear-gradient(160deg,#fff 30%,${per.cor})">
-      <div class="simbolos">${u.sons.slice(0, 3).map((s) => esc(s.ipa)).join(" ")}</div>
+      <div class="simbolos maiusc">${u.sons.slice(0, 3).map((s) => esc(letraPrincipal(s))).join(" ")}</div>
       <img class="bicho" src="${per.img}" alt="">
       <div class="rotulo">${esc(u.titulo)}</div>
       <div class="sub">${feitos}/${u.sons.length} sons</div>
@@ -323,21 +394,23 @@ TELAS.inicio = (tela) => {
       </div>
       ${unidadesHtml}
       <div class="bloco foco" tabindex="0" id="b-silabas" style="background:linear-gradient(160deg,#fff 30%,#a5e3a0)">
-        <div class="simbolos">pa · bo</div><div class="rotulo">Sílabas</div><div class="sub">juntar sons</div></div>
+        <div class="simbolos maiusc">pa · bo</div><div class="rotulo">Sílabas</div><div class="sub">juntar sons</div></div>
       <div class="bloco foco" tabindex="0" id="b-palavras" style="background:linear-gradient(160deg,#fff 30%,#ffd6a5)">
         <div class="simbolos">🍇 🐸</div><div class="rotulo">Palavras</div><div class="sub">juntar sílabas</div></div>
-      <div class="bloco foco" tabindex="0" id="b-ler" style="background:linear-gradient(160deg,#fff 30%,#c9b8ff)">
-        <div class="simbolos" style="color:var(--tinta)">uva</div><div class="rotulo">Ler</div><div class="sub">ler e achar a figura</div></div>
+      <div class="bloco foco" tabindex="0" id="b-jogos" style="background:linear-gradient(160deg,#fff 30%,#c9b8ff)">
+        <div class="simbolos">📖 🧩 📒</div><div class="rotulo">Jogos</div><div class="sub">ler, montar e figurinhas</div></div>
     </div>
     <div class="barra-inferior">
+      ${progresso.ultima && TELAS[progresso.ultima.nome] ? '<button class="botao foco" id="b-ultima">↻ Última lição</button>' : ""}
       <button class="botao foco" id="b-pais">⚙️ Pais</button>
     </div>`;
   $("#b-assistir", tela).onclick = () => iniciarAssistir();
   $$("[data-unidade]", tela).forEach((b) => (b.onclick = () => irPara("unidade", { id: b.dataset.unidade })));
   $("#b-silabas", tela).onclick = () => irPara("silabasMenu");
   $("#b-palavras", tela).onclick = () => irPara("palavrasMenu");
-  $("#b-ler", tela).onclick = () => irPara("ler");
+  $("#b-jogos", tela).onclick = () => irPara("jogos");
   $("#b-pais", tela).onclick = () => irPara("pais");
+  const bu = $("#b-ultima", tela); if (bu) bu.onclick = () => irPara(progresso.ultima.nome, progresso.ultima.args);
 };
 
 /* ---------- Unidade: grade de sons do personagem ---------- */
@@ -351,7 +424,7 @@ TELAS.unidade = (tela, { id }, t) => {
     <div class="grade-sons" style="top:400px">
       ${u.sons.map((s, i) => `<div class="som-cartao foco" tabindex="0" data-i="${i}" ${i === 0 ? "data-inicial" : ""}>
         ${progresso.sons[s.id] ? '<div class="selo">⭐</div>' : ""}
-        <div class="ipa so-ipa">${esc(s.ipa)}</div><div class="letras so-escrita">${esc(s.letras)}</div></div>`).join("")}
+        <div class="letras so-escrita">${esc(s.letras)}</div><div class="ipa so-ipa">/${esc(s.ipa)}/</div></div>`).join("")}
     </div>`;
   $(".grade-sons", tela).style.left = "560px";
   $$(".som-cartao", tela).forEach((c) => (c.onclick = () => irPara("som", { unidade: id, i: +c.dataset.i })));
@@ -360,13 +433,15 @@ TELAS.unidade = (tela, { id }, t) => {
 };
 
 /* ---------- Lição de um som ---------- */
+function tamanhoLetras(t) { const n = String(t).length; return Math.round(Math.min(300, 840 / Math.max(1, n))); }
 async function apresentarSom(tela, s, t, { passivo = false } = {}) {
   const u = s.unidade || SONS[s.id].unidade;
   const p = PALAVRAS[s.exemplo];
   tela.innerHTML = `
     ${imgPersonagem(u.personagem, "left:70px;top:300px;height:680px", "chegando")}
-    <div class="cartao-ipa so-ipa" style="opacity:0"><div class="barras"><span>/</span><span>/</span></div><div class="ipa">${esc(s.ipa)}</div></div>
-    <div class="painel-letras so-escrita" style="opacity:0"><div class="titulo">se escreve</div><div class="letras">${esc(s.letras)}</div></div>
+    <div class="cartao-ipa" style="opacity:0">
+      <div class="letra-grande so-escrita" style="font-size:${tamanhoLetras(s.letras)}px">${esc(s.letras)}</div>
+      <div class="ipa-pequeno so-ipa">/${esc(s.ipa)}/</div></div>
     <div class="cartao-palavra" style="opacity:0">${figuraPalavra(p)}${palavraMarcada(p, s.ipa)}</div>
     <div class="dica" style="opacity:0">💡 ${esc(s.dica)}</div>`;
   const bicho = $(".personagem", tela);
@@ -382,10 +457,8 @@ async function apresentarSom(tela, s, t, { passivo = false } = {}) {
     await tocar("som_" + s.id, { personagem: bicho }); if (!ok()) return false;
     await esperar(500); if (!ok()) return false;
   }
-  const letras = $(".painel-letras", tela); letras.style.opacity = 1; letras.classList.add("aparecer");
   $(".dica", tela).style.opacity = 1;
-  await esperar(900); if (!ok()) return false;
-  letras.style.transition = "opacity .4s"; letras.style.opacity = 0;
+  await esperar(600); if (!ok()) return false;
   const cp = $(".cartao-palavra", tela); cp.style.opacity = 1; cp.classList.add("aparecer");
   await esperar(500); if (!ok()) return false;
   await tocar("palavra_" + p.id, { personagem: bicho }); if (!ok()) return false;
@@ -414,7 +487,8 @@ async function jogoEncontrarSom(tela, s, u, t) {
   const opcoes = embaralhar([s, ...embaralhar(outros).slice(0, 2)]);
   const bicho = $(".personagem", tela);
   $(".dica", tela).style.opacity = 0;
-  const caixa = el(`<div class="opcoes">${opcoes.map((o) => `<div class="opcao foco" tabindex="0" data-id="${o.id}">${esc(o.ipa)}</div>`).join("")}
+  const caixa = el(`<div class="opcoes">${opcoes.map((o) => `<div class="opcao opcao-som foco" tabindex="0" data-id="${o.id}">
+      <div class="op-letras so-escrita" style="font-size:${Math.round(tamanhoLetras(o.letras) * 0.42)}px">${esc(o.letras)}</div><div class="op-ipa so-ipa">/${esc(o.ipa)}/</div></div>`).join("")}
      <button class="botao foco" id="b-ouvir" style="align-self:center">🔊</button></div>`);
   tela.appendChild(caixa);
   const perguntar = async () => {
@@ -428,7 +502,7 @@ async function jogoEncontrarSom(tela, s, u, t) {
   $$(".opcao", caixa).forEach((b) => (b.onclick = async () => {
     if (b.dataset.id === s.id) {
       b.classList.add("certo");
-      marcar("sons", s.id, tentativas === 0);
+      if (tentativas === 0) marcar("sons", s.id, true);
       festa(); comemorar(bicho);
       await tocar(`frase_${u.personagem}_muito_bem`, { personagem: bicho }); if (!vivo(t)) return;
       await tocar("som_" + s.id); if (!vivo(t)) return;
@@ -439,6 +513,7 @@ async function jogoEncontrarSom(tela, s, u, t) {
       }, () => irPara("som", { unidade: u.id, i: u.sons.findIndex((x) => x.id === s.id) }, { empilhar: false }));
     } else {
       tentativas++;
+      if (tentativas === 1) marcar("sons", s.id, false);
       b.classList.remove("errado"); void b.offsetWidth; b.classList.add("errado");
       await tocar(`frase_${u.personagem}_de_novo`, { personagem: bicho }); if (!vivo(t)) return;
       await tocar("som_" + s.id, { personagem: bicho });
@@ -463,7 +538,7 @@ TELAS.silabasMenu = (tela) => {
       ${C.silabas.map((g, i) => { const s = SONS[g.c]; const feitas = g.itens.filter(([o]) => progresso.silabas[g.c + "_" + o]).length;
         return `<div class="ladrilho foco" tabindex="0" data-c="${g.c}" ${i === 0 ? "data-inicial" : ""}>
           ${feitas ? `<div class="selo">⭐ ${feitas}</div>` : ""}
-          <div class="ipa so-ipa">${esc(s.ipa)}</div><div class="esc so-escrita" style="color:var(--escrita)">${esc(g.itens[0][0])} ${esc(g.itens[1][0])} ${esc(g.itens[2][0])}…</div></div>`; }).join("")}
+          <div class="esc-grande so-escrita">${esc(g.itens[0][0])} ${esc(g.itens[1][0])} ${esc(g.itens[2][0])}</div><div class="p-ipa so-ipa">/${esc(s.ipa)}/</div></div>`; }).join("")}
     </div></div>`;
   $$(".ladrilho", tela).forEach((b) => (b.onclick = () => irPara("silabas", { c: b.dataset.c })));
 };
@@ -474,11 +549,11 @@ async function demonstrarSilabas(tela, grupo, t, { passivo = false } = {}) {
   tela.innerHTML = `
     ${imgPersonagem(per, "left:40px;top:330px;height:640px", "chegando")}
     <div class="mistura">
-      <div class="peca consoante"><div class="ipa so-ipa">${esc(cons.ipa)}</div><div class="esc so-escrita">${esc(grupo.itens[0][0].replace(/[aeiou]$/, ""))}</div></div>
+      <div class="peca consoante"><div class="esc so-escrita">${esc(grupo.itens[0][0].replace(/[aeiou]$/, ""))}</div><div class="ipa so-ipa">/${esc(cons.ipa)}/</div></div>
       <div class="mais">+</div>
-      <div class="peca vogal"><div class="ipa so-ipa"></div><div class="esc so-escrita"></div></div>
+      <div class="peca vogal"><div class="esc so-escrita"></div><div class="ipa so-ipa"></div></div>
     </div>
-    <div class="fila-vogais">${grupo.itens.map(([o, ipa]) => `<div class="mini" data-o="${esc(o)}"><div class="ipa so-ipa">${esc(ipa)}</div><div class="esc so-escrita">${esc(o)}</div></div>`).join("")}</div>`;
+    <div class="fila-vogais">${grupo.itens.map(([o, ipa]) => `<div class="mini" data-o="${esc(o)}"><div class="esc so-escrita">${esc(o)}</div><div class="ipa so-ipa">/${esc(ipa)}/</div></div>`).join("")}</div>`;
   const bicho = $(".personagem", tela);
   const pc = $(".peca.consoante", tela), pv = $(".peca.vogal", tela), mais = $(".mais", tela);
   const ok = () => vivo(t);
@@ -491,8 +566,8 @@ async function demonstrarSilabas(tela, grupo, t, { passivo = false } = {}) {
     const vog = SONS[vogalId];
     // separa
     pc.classList.remove("juntas", "sumir"); pv.classList.remove("juntas", "sumir"); mais.style.opacity = 1;
-    pc.innerHTML = `<div class="ipa so-ipa">${esc(ipa.replace(/[aeiouɛɔ]$/, "") || cons.ipa)}</div><div class="esc so-escrita">${esc(o.replace(/[aeiou]$/, ""))}</div>`;
-    pv.innerHTML = `<div class="ipa so-ipa">${esc(vog.ipa)}</div><div class="esc so-escrita">${esc(o.slice(-1))}</div>`;
+    pc.innerHTML = `<div class="esc so-escrita">${esc(o.replace(/[aeiou]$/, ""))}</div><div class="ipa so-ipa">/${esc(ipa.replace(/[aeiouɛɔ]$/, "") || cons.ipa)}/</div>`;
+    pv.innerHTML = `<div class="esc so-escrita">${esc(o.slice(-1))}</div><div class="ipa so-ipa">/${esc(vog.ipa)}/</div>`;
     await esperar(700); if (!ok()) return false;
     pc.classList.remove("ativa"); void pc.offsetWidth; pc.classList.add("ativa");
     await tocar("som_" + grupo.c, { personagem: bicho }); if (!ok()) return false;
@@ -505,7 +580,7 @@ async function demonstrarSilabas(tela, grupo, t, { passivo = false } = {}) {
     pv.classList.add("sumir");
     pc.style.left = "";
     pc.classList.add("juntas");
-    pc.innerHTML = `<div class="ipa so-ipa">${esc(ipa)}</div><div class="esc so-escrita">${esc(o)}</div>`;
+    pc.innerHTML = `<div class="esc so-escrita">${esc(o)}</div><div class="ipa so-ipa">/${esc(ipa)}/</div>`;
     await tocar(`silaba_${grupo.c}_${o}`, { personagem: bicho }); if (!ok()) return false;
     await esperar(400);
     await tocar(`silaba_${grupo.c}_${o}`, { personagem: bicho }); if (!ok()) return false;
@@ -541,14 +616,15 @@ TELAS.silabas = async (tela, { c }, t) => {
   $$(".opcao", caixa).forEach((b) => (b.onclick = async () => {
     if (b.dataset.o === alvo[0]) {
       b.classList.add("certo"); festa(); comemorar(bicho);
-      marcar("silabas", c + "_" + alvo[0], tent === 0);
+      if (tent === 0) marcar("silabas", c + "_" + alvo[0], true);
       await tocar(`frase_${per}_muito_bem`, { personagem: bicho }); if (!vivo(t)) return;
       const idx = C.silabas.findIndex((g) => g.c === c);
       caixa.remove();
       mostrarProximo(tela, () => { const prox = C.silabas[idx + 1]; if (prox) irPara("silabas", { c: prox.c }, { empilhar: false }); else voltar(); },
         () => irPara("silabas", { c }, { empilhar: false }));
     } else {
-      tent++; b.classList.remove("errado"); void b.offsetWidth; b.classList.add("errado");
+      tent++; if (tent === 1) marcar("silabas", c + "_" + alvo[0], false);
+      b.classList.remove("errado"); void b.offsetWidth; b.classList.add("errado");
       await tocar(`frase_${per}_de_novo`, { personagem: bicho }); if (vivo(t)) await tocar(`silaba_${c}_${alvo[0]}`, { personagem: bicho });
     }
   }));
@@ -612,16 +688,17 @@ TELAS.palavra = async (tela, { id }, t) => {
 
 /* ---------- Ler: ver a palavra escrita e achar a figura ---------- */
 TELAS.ler = async (tela, { nivel = 0 } = {}, t) => {
-  // prioriza palavras já vistas, mas também usa as outras
+  // metade das vezes revisa uma palavra que a criança errou ou está "vencida"
   const pool = C.palavras;
-  const p = sortear(pool);
+  const revisar = paraRevisar("leitura", pool.map((x) => x.id));
+  const p = revisar.length && Math.random() < 0.5 ? PALAVRAS[revisar[0]] : sortear(pool);
   const outras = embaralhar(pool.filter((x) => x !== p)).slice(0, 2);
   const opcoes = embaralhar([p, ...outras]);
   const guia = sortear(Object.keys(C.personagens));
   tela.innerHTML = `
     <div class="topo"><h1>Ler</h1><div class="espaco"></div><div class="pilula">${estrelasTxt()}</div></div>
     ${imgPersonagem(guia, "left:40px;top:330px;height:640px", "chegando")}
-    <div class="palavra-ler"><div class="esc">${esc(p.escritaFinal)}</div><div class="ipa so-ipa">/${esc(p.ipaFinal)}/</div></div>
+    <div class="palavra-ler"><div class="esc maiusc">${esc(p.escritaFinal)}</div><div class="ipa so-ipa">/${esc(p.ipaFinal)}/</div></div>
     <div class="opcoes figuras">${opcoes.map((o) => `<div class="opcao foco" tabindex="0" data-id="${o.id}">${figuraPalavra(o)}</div>`).join("")}
       <button class="botao foco" id="b-ajuda" style="align-self:center">🔊 Ajuda</button></div>`;
   const bicho = $(".personagem", tela);
@@ -633,33 +710,153 @@ TELAS.ler = async (tela, { nivel = 0 } = {}, t) => {
   $$(".opcao", tela).forEach((b) => (b.onclick = async () => {
     if (b.dataset.id === p.id) {
       b.classList.add("certo"); festa(); comemorar(bicho);
-      marcar("leitura", p.id, tent === 0);
+      if (tent === 0) marcar("leitura", p.id, true);
       await tocar("palavra_" + p.id, { personagem: bicho }); if (!vivo(t)) return;
       await tocar(`frase_${guia}_muito_bem`, { personagem: bicho }); if (!vivo(t)) return;
       await esperar(600); if (!vivo(t)) return;
       irPara("ler", {}, { empilhar: false });
     } else {
-      tent++; b.classList.remove("errado"); void b.offsetWidth; b.classList.add("errado");
+      tent++; if (tent === 1) marcar("leitura", p.id, false);
+      b.classList.remove("errado"); void b.offsetWidth; b.classList.add("errado");
       await tocar(`frase_${guia}_de_novo`, { personagem: bicho });
     }
   }));
 };
 
+/* ---------- Jogos ---------- */
+function temFigurinha(id) { return ((progresso.leitura[id] || {}).acertos || 0) + (((progresso.monte || {})[id] || {}).acertos || 0) > 0; }
+TELAS.jogos = (tela) => {
+  const ganhas = C.palavras.filter((p) => temFigurinha(p.id)).length;
+  tela.innerHTML = `
+    <div class="topo"><h1>Jogos</h1><div class="espaco"></div><div class="pilula">${estrelasTxt()}</div></div>
+    <div class="grade-jogos">
+      <div class="bloco foco jogo" tabindex="0" data-inicial id="j-ler" style="background:linear-gradient(160deg,#fff 30%,#c9b8ff)">
+        <div class="icone-jogo">📖</div><div class="rotulo">Ler</div><div class="sub">ler a palavra e achar a figura</div></div>
+      <div class="bloco foco jogo" tabindex="0" id="j-monte" style="background:linear-gradient(160deg,#fff 30%,#a5e3a0)">
+        <div class="icone-jogo">🧩</div><div class="rotulo">Monte a palavra</div><div class="sub">juntar as sílabas na ordem</div></div>
+      <div class="bloco foco jogo" tabindex="0" id="j-album" style="background:linear-gradient(160deg,#fff 30%,#ffd6a5)">
+        <div class="icone-jogo">📒</div><div class="rotulo">Álbum</div><div class="sub">${ganhas} de ${C.palavras.length} figurinhas</div></div>
+    </div>`;
+  $("#j-ler", tela).onclick = () => irPara("ler");
+  $("#j-monte", tela).onclick = () => irPara("monte");
+  $("#j-album", tela).onclick = () => irPara("album");
+};
+
+/* ---------- Monte a palavra: ver a figura e escolher as sílabas na ordem ---------- */
+TELAS.monte = async (tela, { id } = {}, t) => {
+  const candidatas = C.palavras.filter((p) => p.s.length >= 2);
+  const revisar = paraRevisar("monte", candidatas.map((x) => x.id));
+  const p = id ? PALAVRAS[id] : (revisar.length && Math.random() < 0.5 ? PALAVRAS[revisar[0]] : sortear(candidatas.filter((x) => x.nivel === 1 || Object.keys(progresso.sons).length > 15)));
+  const outras = embaralhar(C.palavras.filter((x) => x !== p).flatMap((x) => x.s.map((y) => y[0])))
+    .filter((o, i, arr) => arr.indexOf(o) === i && !p.s.some((y) => y[0] === o)).slice(0, 2);
+  const pecas = embaralhar([...p.s.map(([o, ipa], i) => ({ o, ipa, i })), ...outras.map((o) => ({ o, ipa: "", i: -1 }))]);
+  const guia = sortear(Object.keys(C.personagens));
+  tela.innerHTML = `
+    <div class="topo"><h1>Monte a palavra</h1><div class="espaco"></div><div class="pilula">${estrelasTxt()}</div></div>
+    ${imgPersonagem(guia, "left:40px;top:330px;height:640px", "chegando")}
+    <div class="monte-figura">${figuraPalavra(p)}</div>
+    <div class="monte-casas">${p.s.map(() => `<div class="casa"><div class="esc so-escrita"></div><div class="ipa so-ipa"></div></div>`).join("")}</div>
+    <div class="monte-pecas">${pecas.map((x, k) => `<div class="peca-monte foco" tabindex="0" data-k="${k}"><span class="so-escrita">${esc(x.o)}</span></div>`).join("")}
+      <button class="botao foco" id="b-ouvir">🔊</button></div>`;
+  const bicho = $(".personagem", tela);
+  const casas = $$(".casa", tela);
+  let proxima = 0, tent = 0;
+  const dica = async () => { await tocar("palavra_" + p.id, { personagem: bicho }); };
+  $("#b-ouvir", tela).onclick = dica;
+  esperar(700).then(async () => { if (!vivo(t)) return; await tocar(`frase_${guia}_juntos`, { personagem: bicho }); if (vivo(t)) dica(); });
+  let ocupado = false;
+  $$(".peca-monte", tela).forEach((b) => (b.onclick = async () => {
+    if (b.classList.contains("usada") || ocupado || proxima >= p.s.length) return;
+    const x = pecas[+b.dataset.k];
+    if (x.o === p.s[proxima][0]) {
+      b.classList.add("usada");
+      const n = proxima++; // avança já: a criança pode apertar a próxima sílaba enquanto esta toca
+      const casa = casas[n];
+      $(".esc", casa).textContent = x.o; $(".ipa", casa).textContent = "/" + p.s[n][1] + "/";
+      casa.classList.add("cheia");
+      if (proxima === p.s.length) { ocupado = true; await tocar(`psil_${p.id}_${n}`, { personagem: bicho }); }
+      else tocar(`psil_${p.id}_${n}`, { personagem: bicho });
+      if (proxima === p.s.length) {
+        if (!vivo(t)) return;
+        $(".monte-casas", tela).classList.add("completa");
+        if (tent === 0) marcar("monte", p.id, true);
+        festa(); comemorar(bicho);
+        await tocar("palavra_" + p.id, { personagem: bicho }); if (!vivo(t)) return;
+        await tocar(`frase_${guia}_muito_bem`, { personagem: bicho }); if (!vivo(t)) return;
+        $(".monte-pecas", tela).remove();
+        mostrarProximo(tela, () => irPara("monte", {}, { empilhar: false }), () => irPara("monte", { id: p.id }, { empilhar: false }));
+        $(".opcoes", tela).style.top = "880px";
+      } else {
+        const livre = $$(".peca-monte:not(.usada)", tela)[0]; if (livre && document.activeElement === b) livre.focus();
+      }
+    } else {
+      tent++; if (tent === 1) marcar("monte", p.id, false);
+      b.classList.remove("errado"); void b.offsetWidth; b.classList.add("errado");
+      setTimeout(() => b.classList.toggle("errado", false), 700);
+      await tocar(`frase_${guia}_de_novo`, { personagem: bicho }); if (vivo(t)) await tocar(`psil_${p.id}_${proxima}`, { personagem: bicho });
+    }
+  }));
+};
+
+/* ---------- Álbum de figurinhas ---------- */
+TELAS.album = (tela) => {
+  const ganhas = C.palavras.filter((p) => temFigurinha(p.id));
+  tela.innerHTML = `
+    <div class="topo"><h1>Álbum</h1><div class="espaco"></div><div class="pilula">📒 ${ganhas.length} / ${C.palavras.length}</div></div>
+    <div class="rolagem"><div class="grade-ladrilhos">
+      ${C.palavras.map((p, i) => { const tem = temFigurinha(p.id);
+        return `<div class="ladrilho foco figurinha ${tem ? "" : "bloqueada"}" tabindex="0" data-id="${p.id}" ${i === 0 ? "data-inicial" : ""}>
+          ${figuraPalavra(p)}<div class="esc so-escrita">${tem ? esc(p.escritaFinal) : "?"}</div></div>`; }).join("")}
+    </div></div>`;
+  $$(".figurinha", tela).forEach((b) => (b.onclick = async () => {
+    if (b.classList.contains("bloqueada")) { b.classList.remove("errado"); void b.offsetWidth; b.classList.add("errado"); return; }
+    b.classList.remove("pulo"); void b.offsetWidth; b.classList.add("pulo");
+    await tocar("palavra_" + b.dataset.id);
+  }));
+  if (ganhas.length === C.palavras.length) festa(120);
+};
+
+/* ---------- Fora do horário ---------- */
+TELAS.foraHorario = (tela) => {
+  tela.innerHTML = `<div class="descanso">
+    <div class="turma">${Object.keys(C.personagens).map((k) => `<img src="${C.personagens[k].img}" alt="">`).join("")}</div>
+    <h2>A turma está descansando 🌙</h2><p>Volte no horário de brincar: ${esc((HORARIOS[config.horario] || HORARIOS.sempre).nome)}</p>
+    <button class="botao foco" id="b-pais-fora" style="margin-top:40px">⚙️ Pais</button></div>`;
+  $("#b-pais-fora", tela).onclick = () => irPara("pais");
+};
+
 /* ---------- Área dos pais ---------- */
+function linkCelular() {
+  if (!servidor) return "";
+  const u = new URL(servidor);
+  return infoServidor.https ? `https://${u.hostname}:${infoServidor.https}/admin` : `${servidor}/admin`;
+}
+function qrSvg(texto) {
+  try {
+    const q = window.qrcode(0, "M"); q.addData(texto); q.make();
+    return q.createSvgTag({ cellSize: 6, margin: 2, scalable: true });
+  } catch { return ""; }
+}
 TELAS.pais = (tela, args, t) => {
   const opMin = [0, 10, 15, 20, 30];
+  const celular = linkCelular();
   tela.innerHTML = `
     <div class="topo"><h1>Área dos pais</h1></div>
-    <div class="config">
+    <div class="config rolagem-pais">
       <div class="linha-config"><div class="nome">Criança</div>
         ${config.perfis.map((n) => `<button class="botao foco perfil ${n === config.perfil ? "primario" : ""}" data-n="${esc(n)}">${esc(n)}</button>`).join("")}
         <button class="botao foco" id="b-novo">＋</button></div>
+      <div class="linha-config"><div class="nome">Letras</div>
+        <button class="botao foco ${config.maiusculas !== false ? "primario" : ""}" id="b-mai">MAIÚSCULAS</button>
+        <button class="botao foco ${config.maiusculas === false ? "primario" : ""}" id="b-min">minúsculas</button></div>
       <div class="linha-config"><div class="nome">Mostrar símbolos IPA</div>
         <button class="botao foco ${config.mostrarIPA ? "primario" : ""}" id="b-ipa">${config.mostrarIPA ? "Sim" : "Não"}</button></div>
       <div class="linha-config"><div class="nome">Mostrar escrita (letras)</div>
         <button class="botao foco ${config.mostrarEscrita ? "primario" : ""}" id="b-esc">${config.mostrarEscrita ? "Sim" : "Não"}</button></div>
       <div class="linha-config"><div class="nome">Tempo de tela (Assistir)</div>
         ${opMin.map((m) => `<button class="botao foco min ${config.minutos === m ? "primario" : ""}" data-m="${m}">${m ? m + " min" : "livre"}</button>`).join("")}</div>
+      <div class="linha-config"><div class="nome">Horário de uso</div>
+        ${Object.entries(HORARIOS).map(([k, h]) => `<button class="botao foco hor ${config.horario === k ? "primario" : ""}" data-h="${k}">${esc(h.nome)}</button>`).join("")}</div>
       <div class="linha-config"><div class="nome">Tamanho na tela</div>
         <button class="botao foco" id="b-menor">－</button>
         <div class="estado" style="min-width:140px;text-align:center">${Math.round((config.zoom || 1) * 100)}%</div>
@@ -669,9 +866,13 @@ TELAS.pais = (tela, args, t) => {
         <input class="foco" id="i-serv" placeholder="http://192.168.0.10:8080" value="${esc(config.servidor)}">
         <button class="botao foco" id="b-testar">Conectar</button></div>
       <div class="linha-config"><div class="nome"></div><div class="estado" id="estado">${servidor ? "✅ Conectado a " + esc(servidor) : "⚪ Sem servidor (funciona offline)"}</div></div>
+      ${celular ? `<div class="linha-config celular"><div class="nome">No celular<br><span class="estado">gravar áudios e ver relatórios</span></div>
+        <div class="qr foco" tabindex="0">${qrSvg(celular)}</div>
+        <div class="estado">Aponte a câmera do celular para o código<br>ou abra: <b>${esc(celular)}</b>${infoServidor.https ? "<br>Se o celular avisar que o site não é seguro, toque em <b>Avançado → Continuar</b>." : ""}</div></div>` : ""}
       <div class="linha-config"><div class="nome">Progresso de ${esc(config.perfil)}</div>
-        <div class="estado">${Object.keys(progresso.sons).length} sons · ${Object.keys(progresso.silabas).length} sílabas · ${Object.keys(progresso.palavras).length} palavras · ${progresso.estrelas} ★</div></div>
+        <div class="estado">${Object.keys(progresso.sons).length} sons · ${Object.keys(progresso.silabas).length} sílabas · ${Object.keys(progresso.palavras).length} palavras · ${C.palavras.filter((p) => temFigurinha(p.id)).length} figurinhas · ${progresso.estrelas} ★</div></div>
     </div>`;
+  const recarregar = (sel) => { irPara("pais", {}, { empilhar: false }); const b = $(sel); if (b) { b.focus(); b.scrollIntoView({ block: "nearest" }); } };
   $$(".perfil", tela).forEach((b) => (b.onclick = () => { config.perfil = b.dataset.n; salvarConfig(); carregarProgresso(); conectarServidor().finally(() => irPara("pais", {}, { empilhar: false })); }));
   $("#b-novo", tela).onclick = () => {
     const linha = $("#b-novo", tela).parentElement;
@@ -687,10 +888,13 @@ TELAS.pais = (tela, args, t) => {
       }
     });
   };
-  $("#b-ipa", tela).onclick = () => { config.mostrarIPA = !config.mostrarIPA; if (!config.mostrarIPA && !config.mostrarEscrita) config.mostrarEscrita = true; salvarConfig(); irPara("pais", {}, { empilhar: false }); $("#b-ipa").focus(); };
-  $("#b-esc", tela).onclick = () => { config.mostrarEscrita = !config.mostrarEscrita; if (!config.mostrarIPA && !config.mostrarEscrita) config.mostrarIPA = true; salvarConfig(); irPara("pais", {}, { empilhar: false }); $("#b-esc").focus(); };
-  $$(".min", tela).forEach((b) => (b.onclick = () => { config.minutos = +b.dataset.m; salvarConfig(); irPara("pais", {}, { empilhar: false }); $(`.min[data-m="${config.minutos}"]`).focus(); }));
-  const mudarZoom = (z, id) => { config.zoom = Math.min(1.3, Math.max(0.5, Math.round(z * 20) / 20)); salvarConfig(); ajustarEscala(); irPara("pais", {}, { empilhar: false }); $("#" + id).focus(); };
+  $("#b-mai", tela).onclick = () => { config.maiusculas = true; salvarConfig(); recarregar("#b-mai"); };
+  $("#b-min", tela).onclick = () => { config.maiusculas = false; salvarConfig(); recarregar("#b-min"); };
+  $("#b-ipa", tela).onclick = () => { config.mostrarIPA = !config.mostrarIPA; if (!config.mostrarIPA && !config.mostrarEscrita) config.mostrarEscrita = true; salvarConfig(); recarregar("#b-ipa"); };
+  $("#b-esc", tela).onclick = () => { config.mostrarEscrita = !config.mostrarEscrita; if (!config.mostrarIPA && !config.mostrarEscrita) config.mostrarIPA = true; salvarConfig(); recarregar("#b-esc"); };
+  $$(".min", tela).forEach((b) => (b.onclick = () => { config.minutos = +b.dataset.m; salvarConfig(); recarregar(`.min[data-m="${config.minutos}"]`); }));
+  $$(".hor", tela).forEach((b) => (b.onclick = () => { config.horario = b.dataset.h; salvarConfig(); recarregar(`.hor[data-h="${config.horario}"]`); }));
+  const mudarZoom = (z, id) => { config.zoom = Math.min(1.3, Math.max(0.5, Math.round(z * 20) / 20)); salvarConfig(); ajustarEscala(); recarregar("#" + id); };
   $("#b-menor", tela).onclick = () => mudarZoom((config.zoom || 1) - 0.05, "b-menor");
   $("#b-maior", tela).onclick = () => mudarZoom((config.zoom || 1) + 0.05, "b-maior");
   $("#b-zoom1", tela).onclick = () => mudarZoom(1, "b-zoom1");
@@ -703,7 +907,8 @@ TELAS.pais = (tela, args, t) => {
     $("#estado", tela).textContent = "⏳ Procurando…";
     const ok = await conectarServidor();
     if (!vivo(t)) return;
-    $("#estado", tela).textContent = ok ? "✅ Conectado a " + servidor : "❌ Não encontrei o servidor nesse endereço";
+    if (ok) irPara("pais", {}, { empilhar: false });
+    else $("#estado", tela).textContent = "❌ Não encontrei o servidor nesse endereço";
   };
   // pais: foco inicial no perfil atual
   const atual = $(".perfil.primario", tela); if (atual) atual.setAttribute("data-inicial", "");
@@ -715,18 +920,21 @@ let fimAssistir = 0;
 let relogioAssistir = null;
 
 function proximosConteudos() {
-  // Monta uma sequência que avança conforme o progresso:
-  // 3 sons novos (ou revisões) -> 1 grupo de sílabas -> 2 palavras -> repete
+  // Monta uma sequência que avança conforme o progresso, com revisão inteligente:
+  // primeiro os sons que a criança erra ou que estão "vencidos", depois um som novo;
+  // em seguida 1 grupo de sílabas e 2 palavras -> repete
   const sons = Object.values(SONS);
-  const naoVistos = sons.filter((s) => !progresso.sons[s.id]);
-  const revisar = embaralhar(sons.filter((s) => progresso.sons[s.id]));
-  const filaSons = [...naoVistos.slice(0, 2), ...revisar.slice(0, naoVistos.length ? 1 : 3)];
-  if (filaSons.length < 3) filaSons.push(...naoVistos.slice(2, 2 + (3 - filaSons.length)));
+  const novos = sons.filter((s) => !progresso.sons[s.id]);
+  const revisar = paraRevisar("sons", sons.map((s) => s.id)).map((id) => SONS[id]);
+  const vistos = embaralhar(sons.filter((s) => progresso.sons[s.id]));
+  const filaSons = [...revisar.slice(0, 2), ...novos.slice(0, 1)];
+  for (const s of [...novos.slice(1), ...vistos]) { if (filaSons.length >= 3) break; if (!filaSons.includes(s)) filaSons.push(s); }
   const sonsVistos = new Set(Object.keys(progresso.sons));
   const gruposSil = C.silabas.filter((g) => sonsVistos.has(g.c));
   const grupo = sortear(gruposSil.length ? gruposSil : C.silabas.slice(0, 3));
   const palavrasNivel = C.palavras.filter((p) => p.nivel === 1 || Object.keys(progresso.sons).length > 20);
-  const palavras = embaralhar(palavrasNivel).slice(0, 2);
+  const palavrasRevisar = paraRevisar("leitura", palavrasNivel.map((p) => p.id)).map((id) => PALAVRAS[id]);
+  const palavras = [...palavrasRevisar.slice(0, 1), ...embaralhar(palavrasNivel)].filter((p, i, a) => a.indexOf(p) === i).slice(0, 2);
   return [
     ...filaSons.map((s) => ({ tipo: "som", s })),
     { tipo: "silabas", grupo },
@@ -736,6 +944,7 @@ function proximosConteudos() {
 
 async function iniciarAssistir() {
   if (modoAssistir) return;
+  if (!horarioPermitido()) { irPara("foraHorario", {}, { empilhar: false }); return; }
   modoAssistir = true;
   pilha.length = 0; telaAtual = { nome: "inicio", args: {} };
   fimAssistir = config.minutos ? Date.now() + config.minutos * 60000 : Infinity;
@@ -750,7 +959,7 @@ async function iniciarAssistir() {
   while (modoAssistir && token === meu) {
     for (const item of proximosConteudos()) {
       if (!modoAssistir || token !== meu) return;
-      if (Date.now() > fimAssistir) { mostrarDescanso(); return; }
+      if (Date.now() > fimAssistir || !horarioPermitido()) { mostrarDescanso(); return; }
       palco.innerHTML = "";
       const tela = el('<div class="tela"></div>'); palco.appendChild(tela);
       const cont = el('<div></div>'); tela.appendChild(cont);

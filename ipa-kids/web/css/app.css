@@ -103,14 +103,17 @@ html, body {
 /* ------- Unidade (grade de sons) ------- */
 .grade-sons { position: absolute; top: 210px; left: 700px; right: 70px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 36px; }
 .som-cartao { height: 250px; border-radius: 44px; background: #fff; box-shadow: var(--sombra); display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
-.som-cartao .ipa { font-size: 128px; line-height: 1; font-weight: 700; color: var(--ipa); }
-.som-cartao .letras { font-size: 34px; color: var(--escrita); font-weight: 700; margin-top: 10px; }
+.som-cartao .letras { font-size: 96px; line-height: 1.05; color: var(--escrita); font-weight: 700; text-align: center; padding: 0 10px; }
+.som-cartao .ipa { font-size: 38px; color: var(--ipa); margin-top: 8px; }
+.esconder-escrita .som-cartao .ipa { font-size: 110px; font-weight: 700; }
 .som-cartao .selo { position: absolute; top: 14px; right: 18px; font-size: 34px; }
 
 /* ------- Lição de som ------- */
 .cartao-ipa { position: absolute; left: 760px; top: 170px; width: 520px; height: 520px; border-radius: 70px; background: #fff; box-shadow: var(--sombra); display: grid; place-items: center; z-index: 2; }
-.cartao-ipa .ipa { font-size: 330px; line-height: 1; font-weight: 700; color: var(--ipa); }
-.cartao-ipa .barras { position: absolute; top: 30px; left: 40px; right: 40px; display: flex; justify-content: space-between; font-size: 90px; color: #c7bdf0; font-weight: 400; }
+.cartao-ipa { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.cartao-ipa .letra-grande { line-height: 1; font-weight: 700; color: var(--escrita); text-align: center; padding: 0 20px; white-space: nowrap; }
+.cartao-ipa .ipa-pequeno { font-size: 70px; color: var(--ipa); margin-top: 16px; }
+.esconder-escrita .cartao-ipa .ipa-pequeno { font-size: 260px; font-weight: 700; }
 .cartao-ipa.pulsar { animation: pulsar .6s ease-out; }
 @keyframes pulsar { 0% { transform: scale(1); } 35% { transform: scale(1.12) rotate(-2deg); box-shadow: 0 0 0 30px rgba(108,76,216,.18), var(--sombra); } 100% { transform: scale(1); } }
 .aparecer { animation: aparecer .6s cubic-bezier(.2,1.5,.4,1) both; }
@@ -139,8 +142,8 @@ html, body {
 /* ------- Sílabas ------- */
 .mistura { position: absolute; left: 640px; right: 60px; top: 230px; height: 440px; z-index: 2; }
 .peca { position: absolute; top: 40px; width: 380px; height: 380px; border-radius: 60px; background: #fff; box-shadow: var(--sombra); display: flex; flex-direction: column; align-items: center; justify-content: center; transition: left .9s cubic-bezier(.5,0,.3,1.3), transform .4s, opacity .4s; }
-.peca .ipa { font-size: 190px; font-weight: 700; color: var(--ipa); line-height: 1; }
-.peca .esc { font-size: 64px; font-weight: 700; color: var(--escrita); }
+.peca .esc { font-size: 180px; font-weight: 700; color: var(--escrita); line-height: 1; }
+.peca .ipa { font-size: 56px; color: var(--ipa); margin-top: 10px; }
 .peca.consoante { left: 40px; z-index: 2; }
 .peca.vogal { left: 820px; }
 .peca.juntas { left: 380px; width: 520px; transform: scale(1.1); }
@@ -150,8 +153,8 @@ html, body {
 
 .fila-vogais { position: absolute; left: 640px; right: 60px; top: 720px; display: flex; gap: 26px; justify-content: center; z-index: 2; }
 .fila-vogais .mini { width: 170px; height: 150px; border-radius: 34px; background: rgba(255,255,255,.75); display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 700; }
-.fila-vogais .mini .ipa { font-size: 64px; color: var(--ipa); }
-.fila-vogais .mini .esc { font-size: 34px; color: var(--escrita); }
+.fila-vogais .mini .esc { font-size: 64px; color: var(--escrita); line-height: 1.1; }
+.fila-vogais .mini .ipa { font-size: 30px; color: var(--ipa); }
 .fila-vogais .mini.ok { background: #fff; box-shadow: var(--sombra); }
 
 /* ------- Listas roláveis (palavras / consoantes) ------- */
@@ -281,3 +284,57 @@ html, body {
 @keyframes rabo-festa    { from { transform: rotate(-14deg); } to { transform: rotate(18deg); } }
 @keyframes braco-festa   { from { transform: rotate(0deg); } to { transform: rotate(-22deg); } }
 @keyframes braco-festa-d { from { transform: rotate(0deg); } to { transform: rotate(22deg); } }
+
+/* ------- Letras em MAIÚSCULAS (opção dos pais) ------- */
+.maiusculas .so-escrita, .maiusculas .maiusc { text-transform: uppercase; }
+
+/* ------- Opções do jogo "Onde está o som?" ------- */
+.opcao-som { display: flex; flex-direction: column; justify-content: center; min-width: 260px; }
+.opcao-som .op-letras { color: var(--escrita); line-height: 1; white-space: nowrap; }
+.opcao-som .op-ipa { font-size: 44px; color: var(--ipa); font-weight: 400; margin-top: 6px; }
+.opcao-som.certo .op-letras, .opcao-som.certo .op-ipa { color: #fff; }
+.ladrilho .esc-grande { font-size: 74px; font-weight: 700; color: var(--escrita); line-height: 1.1; }
+
+/* ------- Jogos ------- */
+.grade-jogos { position: absolute; top: 230px; left: 90px; right: 90px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 50px; height: 620px; }
+.bloco.jogo { justify-content: center; align-items: center; text-align: center; }
+.icone-jogo { font-size: 200px; line-height: 1.1; margin-bottom: 20px; }
+.bloco.jogo .rotulo { font-size: 60px; }
+
+/* ------- Monte a palavra ------- */
+.monte-figura { position: absolute; left: 640px; right: 60px; top: 170px; height: 330px; display: grid; place-items: center; z-index: 2; }
+.monte-figura .figura { font-size: 260px; }
+.monte-figura .figura img { height: 320px; }
+.monte-casas { position: absolute; left: 640px; right: 60px; top: 530px; display: flex; gap: 26px; justify-content: center; z-index: 2; }
+.casa { width: 260px; height: 230px; border-radius: 44px; border: 8px dashed rgba(35,48,70,.25); background: rgba(255,255,255,.5); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.casa .esc { font-size: 110px; font-weight: 700; color: var(--escrita); line-height: 1.05; }
+.casa .ipa { font-size: 44px; color: var(--ipa); }
+.casa.cheia { border: 8px solid #fff; background: #fff; box-shadow: var(--sombra); animation: aparecer .5s cubic-bezier(.2,1.5,.4,1); }
+.monte-casas.completa { gap: 0; }
+.monte-casas.completa .casa { border-radius: 0; }
+.monte-casas.completa .casa:first-child { border-radius: 44px 0 0 44px; }
+.monte-casas.completa .casa:last-child { border-radius: 0 44px 44px 0; }
+.monte-pecas { position: absolute; left: 640px; right: 60px; top: 820px; display: flex; gap: 30px; justify-content: center; align-items: center; z-index: 3; }
+.peca-monte { min-width: 210px; height: 170px; padding: 0 30px; border-radius: 40px; background: #fff; box-shadow: var(--sombra); display: grid; place-items: center; font-size: 96px; font-weight: 700; color: var(--tinta); }
+.peca-monte.usada { opacity: .2; }
+.peca-monte.errado { background: #ffe1e1; animation: tremer .4s; }
+
+/* ------- Álbum ------- */
+.figurinha.bloqueada .figura { filter: grayscale(1) brightness(.3); opacity: .45; }
+.figurinha.bloqueada .esc { color: var(--tinta-suave); }
+.figurinha.errado { animation: tremer .4s; }
+.figurinha.pulo { animation: pular .5s ease-in-out; }
+
+/* textos dos cartões da tela inicial por cima do bicho */
+.bloco .simbolos { font-size: 54px; z-index: 3; text-shadow: 0 0 10px #fff, 0 0 4px #fff; }
+.descanso .botao { color: var(--tinta); }
+
+/* ------- Área dos pais (rolável) ------- */
+.rolagem-pais .linha-config .nome { width: 430px; flex-shrink: 0; }
+.rolagem-pais .botao { font-size: 34px; padding: 14px 30px; }
+.config.rolagem-pais { bottom: 30px; overflow-y: auto; overflow-x: hidden; padding: 10px 20px 40px; scrollbar-width: none; }
+.config.rolagem-pais::-webkit-scrollbar { display: none; }
+.linha-config { flex-wrap: wrap; }
+.linha-config.celular { align-items: center; }
+.qr { width: 260px; height: 260px; background: #fff; border-radius: 24px; padding: 14px; box-shadow: var(--sombra); }
+.qr svg { width: 100%; height: 100%; display: block; }

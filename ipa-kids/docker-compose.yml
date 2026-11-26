@@ -12,6 +12,7 @@ services:
     restart: unless-stopped
     ports:
       - "8080:8080"
+      - "8443:8443"   # https para gravar áudios pelo celular
     volumes:
       - ${PASTA_DADOS:-./dados}:/dados
 

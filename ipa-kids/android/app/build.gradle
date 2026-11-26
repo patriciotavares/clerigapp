@@ -10,8 +10,8 @@ android {
         applicationId 'br.casa.sonsmagicos'
         minSdk 21
         targetSdk 34
-        versionCode 2
-        versionName '1.1'
+        versionCode 3
+        versionName '1.2'
     }
 
     // Chave de assinatura: com uma chave fixa, cada nova versão instala por cima da anterior na TV.
