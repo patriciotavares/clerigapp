@@ -68,7 +68,8 @@ const config = Object.assign({
   servidor: "",         // ex.: http://192.168.0.10:8080
   perfis: ["Criança 1"],
   perfil: "Criança 1",
-  maiusculas: true,     // letras em MAIÚSCULAS (a criança ainda não conhece as minúsculas)
+  maiusculas: true,
+  videos: true,         // personagens em vídeo (quando o servidor tiver)     // letras em MAIÚSCULAS (a criança ainda não conhece as minúsculas)
   horario: "sempre",    // horários em que o app pode ser usado
 }, lerLocal("config", {}));
 function salvarConfig() { salvarLocal("config", config); aplicarVisual(); }
@@ -130,7 +131,8 @@ aplicarVisual();
 /* ======================= Servidor caseiro ======================= */
 let servidor = null;              // URL base do servidor que respondeu
 let audiosPersonalizados = new Set(); // gravações dos pais (/admin)
-let versoesAudio = {};                // versão de cada gravação (para a TV não usar a antiga em cache)
+let versoesAudio = {};
+let videosPersonagens = new Set();    // personagens com vídeo pronto no servidor                // versão de cada gravação (para a TV não usar a antiga em cache)
 let infoServidor = {};
 let vozesNaturais = new Set();        // vozes Piper geradas no servidor
 
@@ -159,6 +161,11 @@ async function conectarServidor() {
     const a = await (await buscar(servidor + "/api/audios")).json();
     audiosPersonalizados = new Set(a.arquivos || []);
     versoesAudio = a.versoes || {};
+    try {
+      const v = await (await buscar(servidor + "/api/videos")).json();
+      const arqs = new Set(v.videos || []);
+      videosPersonagens = new Set(Object.keys(C.personagens).filter((pid) => ["parado", "falando", "festa"].every((e) => arqs.has(`${pid}_${e}.webm`))));
+    } catch { /* ok */ }
     vozesNaturais = new Set(a.vozes || []);
   } catch { /* ok */ }
   try {
@@ -347,6 +354,15 @@ palco.addEventListener("click", (ev) => { const f = ev.target.closest(".foco"); 
 // Personagem como boneco articulado: corpo + partes móveis (ver ferramentas/gerar_partes.py)
 function imgPersonagem(pid, estilo = "", classe = "") {
   const p = C.personagens[pid];
+  if (servidor && config.videos !== false && videosPersonagens.has(pid)) {
+    // vídeo 3:4 com o personagem um pouco maior que a imagem: ajusta a caixa para manter o tamanho
+    const alt = /height:\s*(\d+)px/.exec(estilo);
+    const h = alt ? Math.round(+alt[1] * 1.12) : 700;
+    const est = estilo.replace(/height:\s*\d+px/, `height:${h}px`).replace(/top:\s*(\d+)px/, (m, t) => `top:${+t - Math.round(h * 0.08)}px`);
+    const v = (e, extra = "") => `<video class="vid v-${e}" src="${servidor}/videos/${pid}_${e}.webm" muted playsinline preload="auto" ${extra}></video>`;
+    return `<div class="personagem video-boneco ${classe}" data-pid="${pid}" role="img" aria-label="${esc(p.nome)}" style="${est};width:${Math.round(h * 0.75)}px">
+      ${v("parado", "loop autoplay")}${v("falando", "loop")}${v("festa")}</div>`;
+  }
   const r = window.RIG && window.RIG[pid];
   if (!r) return `<img class="personagem ${classe}" src="${p.img}" alt="${esc(p.nome)}" style="${estilo}">`;
   const alt = /height:\s*(\d+)px/.exec(estilo);
@@ -879,6 +895,9 @@ TELAS.pais = (tela, args, t) => {
       <div class="linha-config"><div class="nome">Letras</div>
         <button class="botao foco ${config.maiusculas !== false ? "primario" : ""}" id="b-mai">MAIÚSCULAS</button>
         <button class="botao foco ${config.maiusculas === false ? "primario" : ""}" id="b-min">minúsculas</button></div>
+      <div class="linha-config"><div class="nome">Personagens em vídeo</div>
+        <button class="botao foco ${config.videos !== false ? "primario" : ""}" id="b-vid">${config.videos !== false ? "Sim" : "Não"}</button>
+        <div class="estado">${videosPersonagens.size ? `${videosPersonagens.size} prontos no servidor` : "o servidor ainda está preparando"}</div></div>
       <div class="linha-config"><div class="nome">Mostrar símbolos IPA</div>
         <button class="botao foco ${config.mostrarIPA ? "primario" : ""}" id="b-ipa">${config.mostrarIPA ? "Sim" : "Não"}</button></div>
       <div class="linha-config"><div class="nome">Mostrar escrita (letras)</div>
@@ -920,6 +939,7 @@ TELAS.pais = (tela, args, t) => {
   };
   $("#b-mai", tela).onclick = () => { config.maiusculas = true; salvarConfig(); recarregar("#b-mai"); };
   $("#b-min", tela).onclick = () => { config.maiusculas = false; salvarConfig(); recarregar("#b-min"); };
+  $("#b-vid", tela).onclick = () => { config.videos = config.videos === false; salvarConfig(); recarregar("#b-vid"); };
   $("#b-ipa", tela).onclick = () => { config.mostrarIPA = !config.mostrarIPA; if (!config.mostrarIPA && !config.mostrarEscrita) config.mostrarEscrita = true; salvarConfig(); recarregar("#b-ipa"); };
   $("#b-esc", tela).onclick = () => { config.mostrarEscrita = !config.mostrarEscrita; if (!config.mostrarIPA && !config.mostrarEscrita) config.mostrarIPA = true; salvarConfig(); recarregar("#b-esc"); };
   $$(".min", tela).forEach((b) => (b.onclick = () => { config.minutos = +b.dataset.m; salvarConfig(); recarregar(`.min[data-m="${config.minutos}"]`); }));

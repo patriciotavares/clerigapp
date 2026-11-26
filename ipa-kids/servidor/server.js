@@ -26,6 +26,8 @@ const DIR_AUDIO = path.join(DADOS, "audio");
 const DIR_PROG = path.join(DADOS, "progresso");
 const DIR_APK = path.join(DADOS, "apk");
 const DIR_VOZES = path.join(DADOS, "vozes"); // vozes naturais (ElevenLabs ou Piper)
+const DIR_VIDEOS = path.join(DADOS, "videos"); // personagens animados (vídeo com fundo transparente)
+fs.mkdirSync(DIR_VIDEOS, { recursive: true });
 for (const d of [DIR_AUDIO, DIR_PROG, DIR_APK, DIR_VOZES]) fs.mkdirSync(d, { recursive: true });
 
 const TIPOS = {
@@ -148,6 +150,15 @@ async function atender(req, res) {
       return enviarArquivo(req, res, path.join(DIR_AUDIO, nome), { "Cache-Control": "no-cache" });
     }
 
+    if (p === "/api/videos") {
+      const lista = fs.readdirSync(DIR_VIDEOS).filter((f) => /^[a-z]+_(parado|falando|festa)\.webm$/.test(f));
+      return json(res, 200, { videos: lista });
+    }
+    if (p.startsWith("/videos/")) {
+      const nome = p.slice("/videos/".length);
+      if (!nomeSeguro(nome)) { res.writeHead(400); return res.end(); }
+      return enviarArquivo(req, res, path.join(DIR_VIDEOS, nome), { "Cache-Control": "max-age=86400" });
+    }
     if (p.startsWith("/vozes/audio/")) {
       const nome = p.slice("/vozes/audio/".length);
       if (!nomeSeguro(nome)) { res.writeHead(400); return res.end(); }
@@ -198,6 +209,45 @@ iniciarHttps();
 // O arquivo vozes-elevenlabs.json lista os áudios gerados no ElevenLabs (um arquivo por lote)
 // e onde cortar cada fala. Na primeira vez que o servidor liga, ele baixa e corta tudo
 // para DADOS/vozes. Depois disso não precisa mais de internet.
+// ---------- Vídeos dos personagens ----------
+// servidor/videos-personagens.json lista os vídeos gerados (fundo verde). Na primeira vez,
+// o servidor baixa cada um e tira o fundo verde com o ffmpeg, gerando .webm transparente.
+async function prepararVideos() {
+  const arq = process.env.VIDEOS_MANIFESTO || path.join(__dirname, "videos-personagens.json");
+  if (!fs.existsSync(arq)) return;
+  const m = JSON.parse(fs.readFileSync(arq, "utf8"));
+  const marca = path.join(DIR_VIDEOS, ".versao-" + (m.versao || 1));
+  if (fs.existsSync(marca)) return;
+  console.log("Preparando os vídeos dos personagens (pode levar alguns minutos)…");
+  let feitos = 0, erros = 0;
+  for (const [pid, estados] of Object.entries(m.videos)) {
+    for (const [estado, url] of Object.entries(estados)) {
+      const destino = path.join(DIR_VIDEOS, `${pid}_${estado}.webm`);
+      if (fs.existsSync(destino)) { feitos++; continue; }
+      const tmp = path.join(os.tmpdir(), `v-${pid}-${estado}-${Date.now()}.mp4`);
+      try {
+        const r = await fetch(url);
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        fs.writeFileSync(tmp, Buffer.from(await r.arrayBuffer()));
+        const parcial = destino + ".parcial.webm";
+        const f = await new Promise((ok) => {
+          const pr = require("node:child_process").spawn("ffmpeg", ["-y", "-loglevel", "error", "-i", tmp, "-vf", m.filtro,
+            "-c:v", "libvpx-vp9", "-pix_fmt", "yuva420p", "-b:v", "0", "-crf", "34", "-deadline", "good", "-cpu-used", "4",
+            "-row-mt", "1", "-auto-alt-ref", "0", "-an", parcial]);
+          pr.on("close", ok); pr.on("error", () => ok(1));
+        });
+        if (f !== 0) throw new Error("ffmpeg falhou");
+        fs.renameSync(parcial, destino);
+        feitos++;
+        console.log(`  vídeo pronto: ${pid} ${estado}`);
+      } catch (e) { erros++; console.error(`  não consegui preparar ${pid} ${estado}:`, e.message); }
+      fs.rmSync(tmp, { force: true });
+    }
+  }
+  if (!erros) fs.writeFileSync(marca, new Date().toISOString());
+  console.log(`Vídeos dos personagens: ${feitos} prontos${erros ? `, ${erros} com erro (tento de novo no próximo início)` : ""}.`);
+}
+
 async function prepararVozesElevenLabs() {
   const manifesto = path.join(WEB, "..", "ferramentas", "vozes-elevenlabs.json");
   const alt = path.join(__dirname, "vozes-elevenlabs.json");
@@ -232,7 +282,8 @@ async function prepararVozesElevenLabs() {
 }
 
 servidor.listen(PORTA, "0.0.0.0", () => {
-  prepararVozesElevenLabs().catch((e) => console.error("Vozes ElevenLabs:", e.message));
+  prepararVozesElevenLabs().catch((e) => console.error("Vozes ElevenLabs:", e.message))
+    .then(() => prepararVideos()).catch((e) => console.error("Vídeos:", e.message));
   const noDocker = fs.existsSync("/.dockerenv");
   const ips = noDocker ? ["IP-DO-SEU-SERVIDOR"] : Object.values(os.networkInterfaces()).flat().filter((i) => i && i.family === "IPv4" && !i.internal).map((i) => i.address);
   console.log(`Sons Mágicos rodando na porta ${PORTA}`);

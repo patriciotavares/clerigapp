@@ -131,4 +131,37 @@ function quadro(agora) {
   requestAnimationFrame(quadro);
 }
 requestAnimationFrame(quadro);
+
+/* ---- Personagens em vídeo: troca entre parado / falando / comemorando ---- */
+const estadosVideo = new WeakMap();
+function quadroVideo(agora) {
+  for (const el of document.querySelectorAll(".video-boneco")) {
+    let e = estadosVideo.get(el);
+    if (!e) { e = { atual: "parado", inicio: agora, chegando: el.classList.contains("chegando"), rapido: el.dataset.pid === "caracol", festaAte: 0, eraFeliz: false }; estadosVideo.set(el, e); }
+    const feliz = el.classList.contains("feliz");
+    if (feliz && !e.eraFeliz) e.festaAte = agora + 4800;
+    e.eraFeliz = feliz;
+    const quer = agora < e.festaAte ? "festa" : el.classList.contains("falando") ? "falando" : "parado";
+    if (quer !== e.atual) {
+      const novo = el.querySelector(".v-" + quer), velho = el.querySelector(".v-" + e.atual);
+      if (novo) {
+        if (quer === "festa") novo.currentTime = 0;
+        const p = novo.play(); if (p && p.catch) p.catch(() => {});
+        novo.classList.add("ativo");
+        if (velho) { velho.classList.remove("ativo"); setTimeout(() => { if (!velho.classList.contains("ativo")) velho.pause(); }, 250); }
+      }
+      e.atual = quer;
+    } else {
+      const v = el.querySelector(".v-" + quer);
+      if (v && !v.classList.contains("ativo")) v.classList.add("ativo");
+    }
+    if (e.chegando) {
+      const dur = e.rapido ? 650 : 1000, p = Math.min(1, (agora - e.inicio) / dur);
+      el.style.transform = `translateX(${(-800 * Math.pow(1 - p, 3)).toFixed(1)}px)`;
+      if (p >= 1) { e.chegando = false; el.style.transform = ""; }
+    }
+  }
+  requestAnimationFrame(quadroVideo);
+}
+requestAnimationFrame(quadroVideo);
 })();
