@@ -74,6 +74,35 @@ window.RIG = {
    }
   ]
  },
+ "caracol": {
+  "proporcao": 0.8439,
+  "partes": [
+   {
+    "nome": "casco",
+    "tipo": "casco",
+    "px": 38.93,
+    "py": 82.14
+   },
+   {
+    "nome": "cachecol",
+    "tipo": "cachecol",
+    "px": 72.99,
+    "py": 53.8
+   },
+   {
+    "nome": "olho_e",
+    "tipo": "olho",
+    "px": 51.58,
+    "py": 20.53
+   },
+   {
+    "nome": "olho_d",
+    "tipo": "olho_d",
+    "px": 69.59,
+    "py": 20.53
+   }
+  ]
+ },
  "pinguim": {
   "proporcao": 0.9008,
   "partes": [

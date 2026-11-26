@@ -143,5 +143,12 @@ for (const u of C.unidades) {
   });
 }
 
+for (const x of C.extras || []) {
+  gerar(x.id, (wav, mp3) => {
+    sintetizar(x.frase, wav, { tom: C.personagens[x.personagem].tom, velocidade: 135 });
+    finalizar(wav, mp3);
+  });
+}
+
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log(`\nÁudios gerados: ${feitos}, já existiam: ${pulados}. Pasta: ${saida}`);

@@ -20,8 +20,14 @@ window.CURRICULO = {
     urso:     { nome: "Urso",     img: "img/personagens/urso.png",     cor: "#B9814F", tom: 25 },
     cachorro: { nome: "Cachorro", img: "img/personagens/cachorro.png", cor: "#F08A4B", tom: 50 },
     coelho:   { nome: "Coelho",   img: "img/personagens/coelho.png",   cor: "#F7A1C4", tom: 80 },
-    pinguim:  { nome: "Pinguim",  img: "img/personagens/pinguim.png",  cor: "#5DA9E9", tom: 60 }
+    pinguim:  { nome: "Pinguim",  img: "img/personagens/pinguim.png",  cor: "#5DA9E9", tom: 60 },
+    caracol:  { nome: "Caracol",  img: "img/personagens/caracol.png",  cor: "#8FE0BE", tom: 65 }
   },
+
+  /* Falas extras (o Caracol, o mais rapidinho da turma, é o dono dos Jogos) */
+  extras: [
+    { id: "intro_jogos", personagem: "caracol", frase: "Oi! Eu sou o Caracol, o mais rapidinho da turma! Vamos jogar?" }
+  ],
 
   unidades: [
     {

@@ -193,7 +193,35 @@ function urlAudio(nome) {
   if (servidor && vozesNaturais.has(arq)) return servidor + "/vozes/audio/" + arq;
   return "audio/" + arq;
 }
+/* Medidor de volume da voz: os personagens mexem a boca/cabeça no ritmo real da fala.
+ * Só liga quando o app vem do servidor (http) e depois do primeiro toque no controle;
+ * se não der, o vida.js usa um ritmo de sílabas aproximado. */
+let actx = null, analisador = null, amostras = null;
+function ligarMedidor() {
+  if (actx) { if (actx.state === "suspended") actx.resume().catch(() => {}); return; }
+  if (!/^https?:/.test(location.protocol)) return;
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+    actx = new AC();
+    player.crossOrigin = "anonymous";
+    const fonte = actx.createMediaElementSource(player);
+    analisador = actx.createAnalyser(); analisador.fftSize = 512;
+    fonte.connect(analisador); analisador.connect(actx.destination);
+    amostras = new Uint8Array(analisador.fftSize);
+  } catch { analisador = null; }
+}
+["keydown", "click"].forEach((ev) => document.addEventListener(ev, ligarMedidor, true));
+window.SonsMagicosAudio = {
+  nivel() {
+    if (!analisador || !actx || actx.state !== "running" || player.paused) return null;
+    analisador.getByteTimeDomainData(amostras);
+    let soma = 0; for (const v of amostras) { const d = (v - 128) / 128; soma += d * d; }
+    return Math.sqrt(soma / amostras.length);
+  },
+};
+
 function tocar(nome, { personagem = null } = {}) {
+  if (actx && actx.state === "suspended") actx.resume().catch(() => {});
   return new Promise((resolve) => {
     pararAudio();
     const fim = () => { clearTimeout(limite); player.onended = player.onerror = null; if (personagem) personagem.classList.remove("falando"); tocandoResolve = null; resolve(); };
@@ -323,11 +351,9 @@ function imgPersonagem(pid, estilo = "", classe = "") {
   if (!r) return `<img class="personagem ${classe}" src="${p.img}" alt="${esc(p.nome)}" style="${estilo}">`;
   const alt = /height:\s*(\d+)px/.exec(estilo);
   const largura = alt ? `width:${Math.round(+alt[1] * r.proporcao)}px;` : "";
-  // atraso aleatório para os bichos não se mexerem todos iguais
-  const atraso = `animation-delay:-${(Math.random() * 3).toFixed(2)}s`;
-  return `<div class="personagem boneco ${classe}" role="img" aria-label="${esc(p.nome)}" style="${estilo};${largura}">
+  return `<div class="personagem boneco ${classe}" data-pid="${pid}" role="img" aria-label="${esc(p.nome)}" style="${estilo};${largura}">
     <img class="camada" src="img/personagens/partes/${pid}_corpo.png" alt="">
-    ${r.partes.map((x) => `<img class="camada parte t-${x.tipo}" src="img/personagens/partes/${pid}_${x.nome}.png" alt="" style="transform-origin:${x.px}% ${x.py}%;${atraso}">`).join("")}
+    ${r.partes.map((x) => `<img class="camada parte" data-tipo="${x.tipo}" src="img/personagens/partes/${pid}_${x.nome}.png" alt="" style="transform-origin:${x.px}% ${x.py}%">`).join("")}
   </div>`;
 }
 function figuraPalavra(p) {
@@ -725,10 +751,12 @@ TELAS.ler = async (tela, { nivel = 0 } = {}, t) => {
 
 /* ---------- Jogos ---------- */
 function temFigurinha(id) { return ((progresso.leitura[id] || {}).acertos || 0) + (((progresso.monte || {})[id] || {}).acertos || 0) > 0; }
-TELAS.jogos = (tela) => {
+TELAS.jogos = (tela, args, t) => {
   const ganhas = C.palavras.filter((p) => temFigurinha(p.id)).length;
   tela.innerHTML = `
     <div class="topo"><h1>Jogos</h1><div class="espaco"></div><div class="pilula">${estrelasTxt()}</div></div>
+    ${imgPersonagem("caracol", "left:30px;top:420px;height:560px", "chegando")}
+    ${balao("Eu sou o Caracol, o mais rapidinho da turma!", 300, 150)}
     <div class="grade-jogos">
       <div class="bloco foco jogo" tabindex="0" data-inicial id="j-ler" style="background:linear-gradient(160deg,#fff 30%,#c9b8ff)">
         <div class="icone-jogo">📖</div><div class="rotulo">Ler</div><div class="sub">ler a palavra e achar a figura</div></div>
@@ -737,6 +765,8 @@ TELAS.jogos = (tela) => {
       <div class="bloco foco jogo" tabindex="0" id="j-album" style="background:linear-gradient(160deg,#fff 30%,#ffd6a5)">
         <div class="icone-jogo">📒</div><div class="rotulo">Álbum</div><div class="sub">${ganhas} de ${C.palavras.length} figurinhas</div></div>
     </div>`;
+  const bicho = $(".personagem", tela);
+  esperar(700).then(() => vivo(t) && tocar("intro_jogos", { personagem: bicho }));
   $("#j-ler", tela).onclick = () => irPara("ler");
   $("#j-monte", tela).onclick = () => irPara("monte");
   $("#j-album", tela).onclick = () => irPara("album");
@@ -750,7 +780,7 @@ TELAS.monte = async (tela, { id } = {}, t) => {
   const outras = embaralhar(C.palavras.filter((x) => x !== p).flatMap((x) => x.s.map((y) => y[0])))
     .filter((o, i, arr) => arr.indexOf(o) === i && !p.s.some((y) => y[0] === o)).slice(0, 2);
   const pecas = embaralhar([...p.s.map(([o, ipa], i) => ({ o, ipa, i })), ...outras.map((o) => ({ o, ipa: "", i: -1 }))]);
-  const guia = sortear(Object.keys(C.personagens));
+  const guia = "caracol";
   tela.innerHTML = `
     <div class="topo"><h1>Monte a palavra</h1><div class="espaco"></div><div class="pilula">${estrelasTxt()}</div></div>
     ${imgPersonagem(guia, "left:40px;top:330px;height:640px", "chegando")}

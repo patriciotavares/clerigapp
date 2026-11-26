@@ -153,6 +153,7 @@ grupo("Sílabas", C.silabas.flatMap((g) => g.itens.map(([o, ipa]) => [`silaba_${
 grupo("Palavras", C.palavras.map((p) => [`palavra_${p.id}.mp3`, p.emoji || "🐾", `Palavra ${escrita(p).toUpperCase()}`, escrita(p) + " " + p.id]));
 grupo("Sílabas dentro das palavras", C.palavras.flatMap((p) => p.s.map(([o, ipa], i) => [`psil_${p.id}_${i}.mp3`, "/" + ipa + "/", `${o.toUpperCase()} em ${escrita(p).toUpperCase()}`, o + " " + escrita(p)])));
 grupo("Frases dos personagens", Object.keys(C.personagens).flatMap((pid) => Object.entries(C.frases).map(([k, t]) => [`frase_${pid}_${k}.mp3`, "", `${C.personagens[pid].nome}: “${t}”`, "frase " + pid + " " + C.personagens[pid].nome])));
+grupo("Falas extras", (C.extras || []).map((x) => [x.id + ".mp3", "", `${C.personagens[x.personagem].nome}: “${x.frase}”`, "frase " + x.personagem]));
 atualizar();
 
 $("#busca").oninput = (e) => {
