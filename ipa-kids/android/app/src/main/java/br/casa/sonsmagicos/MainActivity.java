@@ -61,6 +61,12 @@ public class MainActivity extends Activity {
         s.setAllowFileAccessFromFileURLs(true);
         s.setAllowUniversalAccessFromFileURLs(true);
         s.setCacheMode(WebSettings.LOAD_DEFAULT);
+        // Não deixar a TV ampliar o texto/página por conta própria: o app ajusta sozinho
+        s.setTextZoom(100);
+        s.setUseWideViewPort(true);
+        s.setLoadWithOverviewMode(true);
+        s.setSupportZoom(false);
+        s.setBuiltInZoomControls(false);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             s.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
         }
@@ -70,16 +76,37 @@ public class MainActivity extends Activity {
         setContentView(web);
         esconderBarras();
 
-        web.loadUrl("file:///android_asset/index.html");
         web.requestFocus();
 
-        procurarServidor();
+        // Se o servidor da casa responder, as telas vêm dele (assim as atualizações
+        // chegam na TV sem reinstalar o app). Sem servidor, usa a cópia dentro do APK.
+        new Thread(new Runnable() {
+            @Override public void run() {
+                final String salvo = servidor.get();
+                final boolean online = salvo.length() > 0 && responde(salvo, 1200);
+                runOnUiThread(new Runnable() {
+                    @Override public void run() {
+                        web.loadUrl(online ? salvo + "/" : "file:///android_asset/index.html");
+                    }
+                });
+                if (!online) procurarServidor();
+            }
+        }).start();
     }
 
     /** Funções que a página pode chamar (window.AndroidTV). */
     private class Ponte {
         @JavascriptInterface
         public String servidor() { return servidor.get(); }
+
+        /** Tamanho real visível, em pixels CSS ("largura,altura"). */
+        @JavascriptInterface
+        public String tela() {
+            float d = getResources().getDisplayMetrics().density;
+            int w = web.getWidth(), h = web.getHeight();
+            if (w <= 0 || h <= 0) { w = getResources().getDisplayMetrics().widthPixels; h = getResources().getDisplayMetrics().heightPixels; }
+            return Math.round(w / d) + "," + Math.round(h / d);
+        }
 
         @JavascriptInterface
         public void sair() { runOnUiThread(new Runnable() { public void run() { finish(); } }); }

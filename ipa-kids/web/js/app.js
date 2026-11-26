@@ -26,14 +26,35 @@ C.palavras.forEach((p) => { p.escritaFinal = p.escrita || p.s.map((x) => x[0]).j
 const VOGAIS_SILABA = ["a", "e", "i", "o", "u"]; // ids dos sons de vogal usados nas sílabas
 
 /* ======================= Escala do palco ======================= */
+// Tamanho visível de verdade. Algumas TVs informam um tamanho maior do que o que aparece;
+// por isso usamos o menor valor entre as medidas (e a medida exata que o app Android manda).
+function tamanhoTela() {
+  const ws = [window.innerWidth, document.documentElement.clientWidth];
+  const hs = [window.innerHeight, document.documentElement.clientHeight];
+  if (window.visualViewport) { ws.push(window.visualViewport.width); hs.push(window.visualViewport.height); }
+  try {
+    if (window.AndroidTV && window.AndroidTV.tela) {
+      const [w, h] = String(window.AndroidTV.tela()).split(",").map(Number);
+      if (w > 0 && h > 0) { ws.push(w); hs.push(h); }
+    }
+  } catch { /* ok */ }
+  return { w: Math.min(...ws.filter((x) => x > 0)), h: Math.min(...hs.filter((x) => x > 0)) };
+}
 function ajustarEscala() {
-  const s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+  const { w, h } = tamanhoTela();
+  if (!(w > 0 && h > 0)) return;
+  let zoom = 1;
+  try { zoom = Number(JSON.parse(localStorage.getItem("sons-magicos:config") || "{}").zoom) || 1; } catch { /* ok */ }
+  const s = Math.min(w / 1920, h / 1080) * zoom;
   palco.style.transform = `scale(${s}) translate(-50%, -50%)`;
   palco.style.transformOrigin = "0 0";
   palco.style.left = "50%"; palco.style.top = "50%";
 }
 window.addEventListener("resize", ajustarEscala);
+if (window.visualViewport) window.visualViewport.addEventListener("resize", ajustarEscala);
 ajustarEscala();
+// a TV às vezes só informa o tamanho certo depois de carregar: ajusta de novo
+[200, 800, 2000].forEach((ms) => setTimeout(ajustarEscala, ms));
 
 /* ======================= Configuração e progresso ======================= */
 const ARMAZ = "sons-magicos";
@@ -639,6 +660,11 @@ TELAS.pais = (tela, args, t) => {
         <button class="botao foco ${config.mostrarEscrita ? "primario" : ""}" id="b-esc">${config.mostrarEscrita ? "Sim" : "Não"}</button></div>
       <div class="linha-config"><div class="nome">Tempo de tela (Assistir)</div>
         ${opMin.map((m) => `<button class="botao foco min ${config.minutos === m ? "primario" : ""}" data-m="${m}">${m ? m + " min" : "livre"}</button>`).join("")}</div>
+      <div class="linha-config"><div class="nome">Tamanho na tela</div>
+        <button class="botao foco" id="b-menor">－</button>
+        <div class="estado" style="min-width:140px;text-align:center">${Math.round((config.zoom || 1) * 100)}%</div>
+        <button class="botao foco" id="b-maior">＋</button>
+        <button class="botao foco" id="b-zoom1">Padrão</button></div>
       <div class="linha-config"><div class="nome">Servidor da casa</div>
         <input class="foco" id="i-serv" placeholder="http://192.168.0.10:8080" value="${esc(config.servidor)}">
         <button class="botao foco" id="b-testar">Conectar</button></div>
@@ -664,6 +690,10 @@ TELAS.pais = (tela, args, t) => {
   $("#b-ipa", tela).onclick = () => { config.mostrarIPA = !config.mostrarIPA; if (!config.mostrarIPA && !config.mostrarEscrita) config.mostrarEscrita = true; salvarConfig(); irPara("pais", {}, { empilhar: false }); $("#b-ipa").focus(); };
   $("#b-esc", tela).onclick = () => { config.mostrarEscrita = !config.mostrarEscrita; if (!config.mostrarIPA && !config.mostrarEscrita) config.mostrarIPA = true; salvarConfig(); irPara("pais", {}, { empilhar: false }); $("#b-esc").focus(); };
   $$(".min", tela).forEach((b) => (b.onclick = () => { config.minutos = +b.dataset.m; salvarConfig(); irPara("pais", {}, { empilhar: false }); $(`.min[data-m="${config.minutos}"]`).focus(); }));
+  const mudarZoom = (z, id) => { config.zoom = Math.min(1.3, Math.max(0.5, Math.round(z * 20) / 20)); salvarConfig(); ajustarEscala(); irPara("pais", {}, { empilhar: false }); $("#" + id).focus(); };
+  $("#b-menor", tela).onclick = () => mudarZoom((config.zoom || 1) - 0.05, "b-menor");
+  $("#b-maior", tela).onclick = () => mudarZoom((config.zoom || 1) + 0.05, "b-maior");
+  $("#b-zoom1", tela).onclick = () => mudarZoom(1, "b-zoom1");
   $("#i-serv", tela).addEventListener("keydown", (e) => { if (e.key === "Enter") $("#b-testar", tela).click(); });
   $("#b-testar", tela).onclick = async () => {
     let v = $("#i-serv", tela).value.trim();
